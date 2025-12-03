@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MBTI 深度人格解析</title>
+    <style>
+        :root { --primary: #8E44AD; --bg: #F8F4F9; --text: #2C3E50; --bar-bg: #E0E0E0; --highlight: #9B59B6; }
+        body { margin: 0; font-family: "PingFang SC", "Helvetica Neue", sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; padding-bottom: 60px; }
+        .container { max-width: 650px; margin: 0 auto; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.03); }
+
+        /* 通用组件 */
+        .btn { display: block; width: 85%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 30px auto; transition: 0.3s; }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .page { display: none; padding-bottom: 40px; }
+        .active { display: block; }
+        
+        /* 1. 登录页 */
+        .auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center; background: linear-gradient(135deg, #fff 0%, #F8F4F9 100%); }
+        .auth-logo { font-size: 40px; font-weight: 900; color: var(--primary); letter-spacing: 4px; margin-bottom: 5px; }
+        .input-key { padding: 15px; border: 2px solid #E1BEE7; border-radius: 10px; width: 100%; max-width: 300px; text-align: center; font-size: 16px; outline: none; margin-top: 40px; transition: 0.3s; }
+        
+        /* 2. 答题页 */
+        .quiz-head { position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 15px 20px; border-bottom: 1px solid #eee; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+        .quiz-body { padding: 20px; }
+        .opt-btn { background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .opt-btn:active { border-color: var(--primary); background: #FDF8FF; color: var(--primary); }
+
+        /* 3. 报告页 */
+        .res-hero { background: var(--primary); color: white; padding: 50px 20px 70px; text-align: center; border-radius: 0 0 40px 40px; position: relative; overflow: hidden; }
+        .type-badge { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+        .type-code { font-size: 60px; font-weight: 800; margin: 15px 0 5px; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .type-nick { font-size: 24px; opacity: 0.95; font-weight: normal; }
+        
+        .report-body { padding: 0 20px; margin-top: -50px; position: relative; z-index: 2; }
+        
+        .section-card { background: #fff; border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .sec-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; color: #333; border-bottom: 1px dashed #eee; padding-bottom: 15px; }
+        .sec-icon { font-size: 20px; margin-right: 10px; background: #F3E5F5; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+        
+        /* 维度条 */
+        .dim-row { margin-bottom: 18px; }
+        .dim-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 6px; }
+        .track { height: 10px; background: #f0f0f0; border-radius: 5px; overflow: hidden; }
+        .fill { height: 100%; background: var(--highlight); border-radius: 5px; width: 0%; transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1); }
+
+        /* 标签 */
+        .tags-box { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .tag-pill { background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 50px; font-size: 13px; backdrop-filter: blur(5px); }
+
+        /* 列表与CP卡片 */
+        .list-item { margin-bottom: 12px; display: flex; align-items: flex-start; font-size: 14px; text-align: justify; }
+        .bullet { color: var(--primary); margin-right: 8px; font-weight: bold; }
+        
+        .cp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .cp-card { background: #F9FAFB; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #eee; }
+        .cp-title { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .cp-val { font-size: 18px; font-weight: bold; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="p1" class="auth-view">
+        <div class="auth-logo">MBTI</div>
+        <div style="width: 40px; height: 4px; background: var(--primary); margin: 10px auto 20px; border-radius: 2px;"></div>
+        <p style="color:#666; font-size:16px; margin-bottom: 5px;">16型人格深度解析报告</p>
+        <p style="color:#999; font-size:12px;">专业版 · 28题 · 约需5分钟</p>
+        <input id="code" class="input-key" placeholder="请输入访问密码">
+        <button class="btn" onclick="start()">开启探索之旅</button>
+        <p id="err" style="color:#E74C3C; font-size:13px; margin-top:15px; display:none">密码错误，请联系客服获取</p>
+    </div>
+
+    <div id="p2" class="page">
+        <div class="quiz-head">
+            <span style="font-size:12px; color:#999">进度</span>
+            <span style="color:var(--primary); font-weight:bold;"><span id="idx">1</span> / 28</span>
+        </div>
+        <div class="quiz-body">
+            <h3 id="q-txt" style="font-size: 20px; margin: 10px 0 30px; font-weight: bold;">加载中...</h3>
+            <div id="opt-area"></div>
+        </div>
+    </div>
+
+    <div id="p3" class="page" style="background:#F8F4F9">
+        <div class="res-hero">
+            <span class="type-badge">您的性格原型</span>
+            <div class="type-code" id="r-code">...</div>
+            <div class="type-name" id="r-name">...</div>
+            <div class="tags-box" id="r-tags" style="margin-top:20px;"></div>
+        </div>
+
+        <div class="report-body">
+            
+            <div class="section-card">
+                <div class="sec-title"><span class="sec-icon">📊</span>底层维度构成</div>
+                
+                <div class="dim-row">
+                    <div class="dim-info"><span>外向 (E)</span><span id="v-ei">50%</span><span>内向 (I)</span></div>
+                    <div class="track"><div class="fill" id="b-ei"></div></div>
+                </div>
+                <div class="dim-row">
+                    <div class="dim-info"><span>实感 (S)</span><span id="v-sn">50%</span><span>直觉 (N)</span></div>
+                    <div class="track"><div class="fill" id="b-sn"></div></div>
+                </div>
+                <div class="dim-row">
+                    <div class="dim-info"><span>理智 (T)</span><span id="v-tf">50%</span><span>情感 (F)</span></div>
+                    <div class="track"><div class="fill" id="b-tf"></div></div>
+                </div>
+                <div class="dim-row">
+                    <div class="dim-info"><span>判断 (J)</span><span id="v-jp">50%</span><span>感知 (P)</span></div>
+                    <div class="track"><div class="fill" id="b-jp"></div></div>
+                </div>
+            </div>
+
+            <div class="section-card" style="text-align: center;">
+                <div class="sec-title"><span class="sec-icon">🕸️</span>能量分布雷达</div>
+                <div style="font-size:12px; color:#999; margin-bottom:15px;">* 展示您在8个子维度上的倾向强度</div>
+                <div id="radar-box"></div>
+            </div>
+
+            <div class="section-card">
+                <div class="sec-title"><span class="sec-icon">🧠</span>核心性格画像</div>
+                <div id="r-desc" style="font-size:15px; color:#444; text-align:justify;"></div>
+            </div>
+
+            <div class="section-card">
+                <div class="sec-title"><span class="sec-icon">💞</span>社交与恋爱关系</div>
+                <div class="cp-grid">
+                    <div class="cp-card" style="background:#FFF0F5; border-color:#FFC0CB;">
+                        <div class="cp-title">💖 灵魂伴侣</div>
+                        <div class="cp-val" id="cp-best" style="color:#D81B60">...</div>
+                    </div>
+                    <div class="cp-card" style="background:#F0F4FF; border-color:#B0C4DE;">
+                        <div class="cp-title">🤝 最佳拍档</div>
+                        <div class="cp-val" id="cp-work" style="color:#4A90E2">...</div>
+                    </div>
+                </div>
+                <div id="r-love" style="font-size:14px; color:#555; margin-top:15px; text-align:justify;"></div>
+            </div>
+
+            <div class="section-card">
+                <div class="sec-title"><span class="sec-icon">⚖️</span>光与影：优势与盲点</div>
+                <div style="margin-bottom:15px;">
+                    <div style="font-weight:bold; color:#27ae60; margin-bottom:8px;">🌟 您的天赋优势：</div>
+                    <div id="r-strengths"></div>
+                </div>
+                <div>
+                    <div style="font-weight:bold; color:#e67e22; margin-bottom:8px;">⚠️ 潜在盲点：</div>
+                    <div id="r-weaknesses"></div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="sec-title"><span class="sec-icon">🚀</span>职场与成长</div>
+                <div id="r-career" style="font-size:14px; color:#555; margin-bottom:15px;"></div>
+                <div style="border-top:1px dashed #eee; padding-top:15px;">
+                    <div style="font-weight:bold; color:#333; margin-bottom:8px;">💡 给您的建议：</div>
+                    <div id="r-advice" style="font-size:14px; color:#555;"></div>
+                </div>
+            </div>
+
+            <button class="btn" style="background:#fff; color:var(--primary); border:2px solid var(--primary);" onclick="location.reload()">重新测试</button>
+            <div style="text-align:center; font-size:12px; color:#aaa; margin-top:20px;">MBTI © 深度人格测评系统</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ================= 配置区 =================
+    const PASSWORD = "mbti1688"; 
+    // =========================================
+
+    const QS = [
+        {t:"1. 在社交聚会中，你通常是：", k:"EI", a:"E", b:"I", oa:"主动与多人交谈", ob:"只与熟悉的人交流"},
+        {t:"2. 你更倾向于：", k:"SN", a:"S", b:"N", oa:"务实，看重现实", ob:"富有想象力，看重可能"},
+        {t:"3. 做决定时，你更看重：", k:"TF", a:"T", b:"F", oa:"逻辑与规则", ob:"情感与人情"},
+        {t:"4. 你做事的方式通常是：", k:"JP", a:"J", b:"P", oa:"按计划行事", ob:"随性而为"},
+        {t:"5. 你更容易被哪种人吸引：", k:"SN", a:"S", b:"N", oa:"脚踏实地的人", ob:"思维敏捷的人"},
+        {t:"6. 周末休息时，你更喜欢：", k:"EI", a:"E", b:"I", oa:"约朋友聚会", ob:"独处充电"},
+        {t:"7. 遇到问题时，你倾向于：", k:"TF", a:"T", b:"F", oa:"分析利弊", ob:"考虑他人感受"},
+        {t:"8. 工作环境中，你喜欢：", k:"JP", a:"J", b:"P", oa:"任务明确流程清晰", ob:"自由度高应对变化"},
+        {t:"9. 你认为自己是：", k:"EI", a:"E", b:"I", oa:"热情的倾诉者", ob:"安静的倾听者"},
+        {t:"10. 你更关注：", k:"SN", a:"S", b:"N", oa:"当下的细节", ob:"未来的蓝图"},
+        {t:"11. 真理比别人的面子重要吗？", k:"TF", a:"T", b:"F", oa:"是的，事实第一", ob:"不，要顾及情绪"},
+        {t:"12. 关于日程表：", k:"JP", a:"J", b:"P", oa:"喜欢制定并遵守", ob:"不喜欢受束缚"},
+        {t:"13. 在团队中：", k:"EI", a:"E", b:"I", oa:"积极发言主导", ob:"默默思考"},
+        {t:"14. 你更相信：", k:"SN", a:"S", b:"N", oa:"过往经验", ob:"瞬间直觉"},
+        {t:"15. 朋友伤心时：", k:"TF", a:"T", b:"F", oa:"提供解决方案", ob:"给予情感支持"},
+        {t:"16. 你的办公桌：", k:"JP", a:"J", b:"P", oa:"整洁有序", ob:"乱中有序"},
+        {t:"17. 认识新朋友：", k:"EI", a:"E", b:"I", oa:"令人兴奋", ob:"消耗精力"},
+        {t:"18. 更欣赏哪种人：", k:"SN", a:"S", b:"N", oa:"有常识的人", ob:"有创意的人"},
+        {t:"19. 感情用事是：", k:"TF", a:"T", b:"F", oa:"一种弱点", ob:"一种人性体现"},
+        {t:"20. 旅游前：", k:"JP", a:"J", b:"P", oa:"做详细攻略", ob:"到了再说"},
+        {t:"21. 你更喜欢：", k:"EI", a:"E", b:"I", oa:"成为焦点", ob:"待在幕后"},
+        {t:"22. 听别人说话关注：", k:"SN", a:"S", b:"N", oa:"具体事实", ob:"弦外之音"},
+        {t:"23. 别人评价你：", k:"TF", a:"T", b:"F", oa:"冷静理智", ob:"温柔善解人意"},
+        {t:"24. 任务截止前：", k:"JP", a:"J", b:"P", oa:"提前完成", ob:"最后冲刺"},
+        {t:"25. 社交场合：", k:"EI", a:"E", b:"I", oa:"主动介绍自己", ob:"等别人介绍"},
+        {t:"26. 你更擅长：", k:"SN", a:"S", b:"N", oa:"执行操作", ob:"构思点子"},
+        {t:"27. 批评别人：", k:"TF", a:"T", b:"F", oa:"直言不讳", ob:"委婉含蓄"},
+        {t:"28. 生活偏好：", k:"JP", a:"J", b:"P", oa:"有确定性", ob:"有惊喜"}
+    ];
+
+    // 完整数据库：新增了 best(灵魂伴侣) 和 work(最佳拍档)
+    const DB = {
+        "ISTJ": { name: "物流师", best:"ESFP", work:"ESTJ", tags:["严谨","可靠","现实主义"], desc: "您是典型的实干家。安静、严肃，通过全面性和可靠性获得成功。您崇尚事实，注重实际，能够有条不紊地将工作和生活安排得井井有条。", strength: ["诚实正直，说到做到。", "极强的组织能力。", "逻辑清晰，冷静处理危机。"], weakness: ["可能过于死板。", "对他人的情绪反应不够敏感。", "对新事物持怀疑态度。"], career: "适合需要高度准确性和秩序感的工作，如会计、审计员、数据分析师。", love: "感情中极其忠诚。您不擅长浪漫的言语，但会通过实际行动来表达爱意。", advice: "试着接受不可控的变化，生活不是只有黑白。多关注他人的情感需求。" },
+        "ISFJ": { name: "守卫者", best:"ESFP", work:"ISTJ", tags:["温暖","奉献","细致"], desc: "您是温暖而坚定的守护者。虽然安静，但拥有极好的观察力和记忆力。您致力于维护周围环境的和谐，总是把别人的需求放在自己之前。", strength: ["支持性强，乐于助人。", "耐心细致，不遗漏细节。", "忠诚可靠。"], weakness: ["过于谦虚，容易低估自己。", "很难对别人说“不”。", "害怕改变。"], career: "适合服务导向的工作，如护士、社工、小学教师、行政助理。", love: "完美的家庭伴侣，全心全意照顾对方。但有时会过度牺牲自己。", advice: "学会拒绝，您的善良需要有锋芒。不要把所有责任都揽在自己身上。" },
+        "INFJ": { name: "提倡者", best:"ENFP", work:"INTJ", tags:["深邃","理想","洞察"], desc: "您是稀有的理想主义者。外表安静，内心信念坚定。拥有洞察人心的天赋，能看透事物的本质。不满足于表面，总是寻找深层意义。", strength: ["极强的直觉和洞察力。", "富有同情心。", "有原则，追求道德。"], weakness: ["容易因追求完美而精疲力竭。", "非常敏感。", "极其注重隐私。"], career: "适合符合价值观的工作，如心理咨询师、作家、非营利组织人员。", love: "追求灵魂伴侣，渴望深度的精神共鸣。", advice: "设定情感边界，不要吸收所有人的负面情绪。允许自己休息。" },
+        "INTJ": { name: "建筑师", best:"ENFP", work:"ENTJ", tags:["战略家","独立","完美主义"], desc: "您是独立、爱智力挑战的类型。拥有强大的逻辑思维和战略眼光。不满足于表象，总是试图洞察背后的规律。", strength: ["极强的战略思维。", "独立自主。", "逻辑严密，善于解决复杂问题。"], weakness: ["可能显得傲慢。", "对自己和他人要求极高。", "社交场合感到不自在。"], career: "适合高智力投入领域，如软件架构师、战略顾问、科学家。", love: "寻找‘智力伴侣’，在感情中也是理性的。", advice: "练习共情能力。接受不完美，世界允许混乱。" },
+        "ISTP": { name: "鉴赏家", best:"ESTJ", work:"ISFP", tags:["冷静","技艺","冒险"], desc: "您是天生的工匠和解决问题的高手。冷静、理性，对事物的工作原理好奇。喜欢动手操作，享受此时此刻。", strength: ["擅长应对危机。", "极强的动手能力。", "随和灵活。"], weakness: ["容易感到厌倦。", "情感表达困难。", "喜欢冒险，有时忽视风险。"], career: "适合操作和解决突发问题，如飞行员、机械师、软件开发。", love: "需要大量个人空间。不喜欢被情感束缚。", advice: "试着制定长远计划。学习表达情感。" },
+        "ISFP": { name: "探险家", best:"ESTJ", work:"ISTP", tags:["艺术","敏感","随和"], desc: "您是真正的艺术家。用独特的审美眼光看待世界。安静、敏感、和善，活在当下，按照自己的节奏生活。", strength: ["极具艺术天赋。", "富有同情心。", "适应力强。"], weakness: ["缺乏长远计划。", "极度敏感，易受伤害。", "竞争意识薄弱。"], career: "适合自由表达的工作，如设计师、摄影师、兽医。", love: "感情细腻，通过行动表达爱意。", advice: "学会规划未来。不要害怕冲突，健康的冲突能解决问题。" },
+        "INFP": { name: "调停者", best:"ENFJ", work:"INFJ", tags:["治愈","理想","诗意"], desc: "您是无可救药的理想主义者。外表冷静，内心热情。忠于自己的价值观，渴望让世界变得更美好。", strength: ["极富创造力。", "深刻的同理心。", "思想开放。"], weakness: ["过于理想化。", "做事缺乏条理。", "容易陷入情绪。"], career: "适合发挥创意的职业，如作家、心理咨询师、艺术家。", love: "渴望童话般的浪漫和深刻的灵魂连接。", advice: "设定最后期限，治愈拖延症。多参与现实活动。" },
+        "INTP": { name: "逻辑学家", best:"ENTJ", work:"INTJ", tags:["分析","好奇","客观"], desc: "您是拥有无尽好奇心的思考者。对宇宙原理、抽象概念着迷。喜欢在脑海中构建模型，寻找逻辑漏洞。", strength: ["伟大的分析家。", "客观公正。", "极具想象力。"], weakness: ["过度思考难以行动。", "对情感迟钝。", "厌恶规则。"], career: "适合解决复杂问题，如程序员、数学家、研究员。", love: "感情笨拙但真诚。需要直率独立的伴侣。", advice: "将想法付诸行动。练习社交技巧。" },
+        "ESTP": { name: "企业家", best:"ISFJ", work:"ESFP", tags:["活力","大胆","直接"], desc: "您是精力充沛的冒险家。活在当下，行动迅速，喜欢成为焦点。拥有敏锐观察力，是典型的问题解决者。", strength: ["行动力强。", "极强的社交魅力。", "观察敏锐。"], weakness: ["缺乏耐心。", "忽视风险。", "不擅长抽象理论。"], career: "适合高风险高回报工作，如销售、创业者、股票经纪人。", love: "追求新鲜感和激情，喜欢一起冒险。", advice: "行动前数三秒。关注长远目标。" },
+        "ESFP": { name: "表演者", best:"ISTJ", work:"ESTP", tags:["热情","娱乐","乐天"], desc: "您是天生的表演者。热爱生活、人类和物质享受。对于您来说，世界就是舞台，享受每一刻的关注。", strength: ["大胆自信。", "优秀的沟通能力。", "乐于助人。"], weakness: ["容易感到无聊。", "逃避冲突。", "缺乏长远规划。"], career: "适合展现自我的工作，如演员、公关、销售。", love: "热情的恋人，喜欢制造惊喜。", advice: "学习理财和规划。培养深度思考的能力。" },
+        "ENFP": { name: "竞选者", best:"INTJ", work:"ENTP", tags:["自由","创意","热情"], desc: "您是真正自由的灵魂。热情、富有想象力，认为生活充满可能性。寻找与他人深层的情感联系。", strength: ["极具好奇心。", "优秀的沟通者。", "热心肠。"], weakness: ["思维跳跃，难以专注。", "过度思考。", "情绪波动大。"], career: "适合自由发挥的工作，如记者、广告创意、咨询师。", love: "投入快，热情高，渴望灵魂伴侣。", advice: "专注当下，一次只做一件事。学会处理细节。" },
+        "ENTP": { name: "辩论家", best:"INFJ", work:"ENFP", tags:["机智","创新","挑战"], desc: "您是聪明的思想挑战者。反应快、睿智，喜欢辩论。善于发现系统中的漏洞，提出创新方案。", strength: ["思维敏捷。", "极具创新精神。", "魅力十足。"], weakness: ["喜欢争论。", "难以专注，容易半途而废。", "忽视细节。"], career: "适合充满挑战的工作，如律师、企业家、风险投资人。", love: "喜欢智力博弈，需要能接得住梗的伴侣。", advice: "学习贯彻到底。练习倾听，不要总想着反驳。" },
+        "ESTJ": { name: "总经理", best:"ISTP", work:"ISTJ", tags:["传统","效率","秩序"], desc: "您是传统的维护者和管理者。讲究实际、逻辑清晰，善于组织。相信法律和规则，致力于建立秩序。", strength: ["意志坚强。", "极其诚实。", "优秀的组织能力。"], weakness: ["固执己见。", "可能显得冷漠。", "难以放松。"], career: "适合结构化工作，如军官、项目经理、法官。", love: "看重承诺和责任，通过承担责任表达爱。", advice: "尝试理解不同观点。多关注他人感受。" },
+        "ESFJ": { name: "执政官", best:"ISFP", work:"ENFJ", tags:["受欢迎","关怀","合作"], desc: "您是典型的“好人缘”。热心肠、有责任心。喜欢服务他人，致力于创造和谐、温馨的环境。", strength: ["极强的责任感。", "善于社交。", "对他人的需求敏感。"], weakness: ["过分在意评价。", "缺乏变通。", "忽视自己。"], career: "适合服务他人的工作，如教导主任、公关、销售。", love: "非常照顾伴侣，渴望稳定的婚姻。", advice: "停止与他人比较。学会处理冲突。" },
+        "ENFJ": { name: "主人公", best:"INFP", work:"ESFJ", tags:["魅力","利他","领导"], desc: "您是天生的领导者，充满激情。真诚关心他人，能看到每个人的潜能。擅长激励团队。", strength: ["极具感染力。", "天生的领导才能。", "善于共情。"], weakness: ["过于理想化。", "太敏感。", "为了做决定而纠结。"], career: "适合影响他人的职业，如HR总监、公关经理、教师。", love: "全心全意投入，希望帮助伴侣成长。", advice: "接受有些人不想被改变。保护好自己的能量。" },
+        "ENTJ": { name: "指挥官", best:"INTP", work:"INTJ", tags:["远见","强势","效率"], desc: "您是果断的领导者。能迅速看到低效能，并开发解决系统。坦诚、果断，享受领导他人。", strength: ["高效。", "自信，意志坚强。", "战略思维。"], weakness: ["可能变得冷酷。", "傲慢，不耐烦。", "控制欲强。"], career: "适合领导地位工作，如CEO、管理顾问、律师。", love: "在感情中占据主导，欣赏聪明独立的伴侣。", advice: "练习倾听。认可他人的情感价值。允许错误发生。" }
+    };
+
+    let scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+    let cur = 0;
+
+    function start() {
+        if(document.getElementById('code').value.trim() === PASSWORD) {
+            document.getElementById('p1').style.display='none';
+            document.getElementById('p2').style.display='block';
+            renderQ();
+        } else {
+            document.getElementById('err').style.display='block';
+        }
+    }
+
+    function renderQ() {
+        let q = QS[cur];
+        document.getElementById('idx').innerText = cur+1;
+        document.getElementById('q-txt').innerText = q.t;
+        let area = document.getElementById('opt-area');
+        area.innerHTML = '';
+        
+        [{txt:q.oa, key:q.a}, {txt:q.ob, key:q.b}].forEach(item => {
+            let btn = document.createElement('div');
+            btn.className = 'opt-btn';
+            btn.innerText = item.txt;
+            btn.onclick = () => {
+                scores[item.key]++;
+                if(++cur < QS.length) renderQ(); else showReport();
+            }
+            area.appendChild(btn);
+        });
+        window.scrollTo(0,0);
+    }
+
+    function showReport() {
+        document.getElementById('p2').style.display='none';
+        document.getElementById('p3').style.display='block';
+
+        let code = "";
+        code += scores.E >= scores.I ? "E" : "I";
+        code += scores.S >= scores.N ? "S" : "N";
+        code += scores.T >= scores.F ? "T" : "F";
+        code += scores.J >= scores.P ? "J" : "P";
+
+        let data = DB[code];
+        document.getElementById('r-code').innerText = code;
+        document.getElementById('r-name').innerText = data.name;
+        document.getElementById('r-desc').innerText = data.desc;
+        document.getElementById('r-career').innerText = data.career;
+        document.getElementById('r-love').innerText = data.love;
+        document.getElementById('r-advice').innerText = data.advice;
+        
+        // 填充CP (新增功能)
+        document.getElementById('cp-best').innerText = data.best;
+        document.getElementById('cp-work').innerText = data.work;
+
+        let tagsHtml = "";
+        data.tags.forEach(t => tagsHtml += `<span class="tag-pill">#${t}</span>`);
+        document.getElementById('r-tags').innerHTML = tagsHtml;
+
+        function makeList(arr) { return arr.map(txt => `<div class="list-item"><span class="bullet">●</span>${txt}</div>`).join(''); }
+        document.getElementById('r-strengths').innerHTML = makeList(data.strength);
+        document.getElementById('r-weaknesses').innerHTML = makeList(data.weakness);
+
+        function setBar(k1, k2, idTxt, idBar) {
+            let total = scores[k1] + scores[k2];
+            let pct = total === 0 ? 50 : Math.round((scores[k2] / total) * 100);
+            document.getElementById(idTxt).innerText = pct + "%";
+            setTimeout(() => document.getElementById(idBar).style.width = pct + "%", 200);
+        }
+        setBar("E", "I", "v-ei", "b-ei");
+        setBar("S", "N", "v-sn", "b-sn");
+        setBar("T", "F", "v-tf", "b-tf");
+        setBar("J", "P", "v-jp", "b-jp");
+
+        // 画雷达图 (SVG版)
+        drawRadar(scores);
+        
+        window.scrollTo(0,0);
+    }
+
+    function drawRadar(s) {
+        // 转换分数到0-100 (E/I 取差值绝对值或比例)
+        // 这里为了简单展示，我们用四个维度的偏好程度
+        // 0: E-I, 1: S-N, 2: T-F, 3: J-P
+        // 我们取右侧(I, N, F, P)的百分比作为雷达图的点
+        let data = [
+            (s.I / (s.E+s.I)) || 0.5,
+            (s.N / (s.S+s.N)) || 0.5,
+            (s.F / (s.T+s.F)) || 0.5,
+            (s.P / (s.J+s.P)) || 0.5
+        ];
+        
+        let r = 80, c = 100;
+        let poly = "";
+        let axis = "";
+        
+        // 4个轴
+        let labels = ["I (内向)", "N (直觉)", "F (情感)", "P (感知)"];
+        for(let i=0; i<4; i++) {
+            let a = (Math.PI*2*i)/4 - Math.PI/2;
+            let x = c + Math.cos(a)*r;
+            let y = c + Math.sin(a)*r;
+            axis += `<line x1="${c}" y1="${c}" x2="${x}" y2="${y}" stroke="#ddd" stroke-width="1"/>`;
+            // 文字
+            let tx = c + Math.cos(a)*(r+20);
+            let ty = c + Math.sin(a)*(r+20);
+            axis += `<text x="${tx}" y="${ty}" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="#999">${labels[i]}</text>`;
+        }
+
+        // 数据区
+        let dPts = [];
+        for(let i=0; i<4; i++) {
+            let a = (Math.PI*2*i)/4 - Math.PI/2;
+            let val = data[i] * r; // 0~1 * 半径
+            // 稍微把点往外推一点让它不那么挤，或者直接用真实比例
+            // 这里为了视觉效果，基础值+比例
+            let x = c + Math.cos(a)*(val);
+            let y = c + Math.sin(a)*(val);
+            dPts.push(x+","+y);
+        }
+        poly = `<polygon points="${dPts.join(' ')}" fill="rgba(142, 68, 173, 0.3)" stroke="#8E44AD" stroke-width="2"/>`;
+        
+        // 背景圈
+        let bg = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#eee"/>
+                  <circle cx="${c}" cy="${c}" r="${r*0.5}" fill="none" stroke="#eee"/>`;
+
+        document.getElementById('radar-box').innerHTML = `<svg width="240" height="240" viewBox="-20 -20 240 240">${bg}${axis}${poly}</svg>`;
+    }
+</script>
+</body>
+</html>
