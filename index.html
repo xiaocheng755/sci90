@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业心理测评中心</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #f5f7fa; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { font-size: 24px; font-weight: bold; color: #333; }
+        .sub { color: #666; font-size: 14px; margin-top: 5px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        .card { background: white; padding: 20px; border-radius: 12px; display: flex; align-items: center; text-decoration: none; color: #333; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; }
+        .card:active { transform: scale(0.98); background: #f0f0f0; }
+        
+        .icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; margin-right: 15px; flex-shrink: 0;}
+        .info h3 { margin: 0 0 5px 0; font-size: 16px; }
+        .info p { margin: 0; font-size: 12px; color: #888; }
+        .arrow { margin-left: auto; color: #ccc; font-weight: bold; }
+
+        /* 不同颜色的图标 */
+        .c-blue { background: #4A90E2; }
+        .c-pink { background: #FF69B4; }
+        .c-purple { background: #9B59B6; }
+        .c-green { background: #2ECC71; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="title">心理测评中心</div>
+    <div class="sub">专业 · 深度 · 隐私保护</div>
+</div>
+
+<div class="grid">
+    
+    <a href="scl90.html" class="card">
+        <div class="icon c-blue">🏥</div>
+        <div class="info">
+            <h3>SCL-90 心理健康体检</h3>
+            <p>90项深度检测 | 医院同款常模</p>
+        </div>
+        <div class="arrow">></div>
+    </a>
+
+    <a href="mbti.html" class="card">
+        <div class="icon c-purple">🧠</div>
+        <div class="info">
+            <h3>MBTI 16型人格测试</h3>
+            <p>深度性格解析 | 职业与情感建议</p>
+        </div>
+        <div class="arrow">></div>
+    </a>
+
+    <a href="sds.html" class="card">
+        <div class="icon c-green">🍃</div>
+        <div class="info">
+            <h3>SDS 抑郁情绪自测</h3>
+            <p>国际标准量表 | 情绪状态评估</p>
+        </div>
+        <div class="arrow">></div>
+    </a>
+
+    <a href="love.html" class="card">
+        <div class="icon c-pink">❤️</div>
+        <div class="info">
+            <h3>恋爱脑等级测试</h3>
+            <p>趣味测评 | 看看你有多上头</p>
+        </div>
+        <div class="arrow">></div>
+    </a>
+
+</div>
+
+<div style="text-align:center; margin-top:40px; font-size:12px; color:#ccc;">
+    © 2025 在线测评系统
+</div>
+
+</body>
+</html>
