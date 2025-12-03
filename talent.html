@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>多元天赋潜能深度测评</title>
+    <style>
+        :root { --primary: #00C853; --bg: #F1F8E9; --text: #2E7D32; --card-bg: #ffffff; }
+        body { margin: 0; font-family: "PingFang SC", sans-serif; background: var(--bg); color: #333; line-height: 1.6; padding-bottom: 60px; }
+        .container { max-width: 650px; margin: 0 auto; background: var(--bg); min-height: 100vh; }
+
+        /* 1. 登录页 */
+        .auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fff; padding: 30px; text-align: center; }
+        .auth-icon { font-size: 64px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        .input-key { padding: 15px; border: 2px solid #C8E6C9; border-radius: 50px; width: 80%; text-align: center; font-size: 16px; outline: none; margin-top: 30px; transition: 0.3s; }
+        .input-key:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0,200,83,0.2); }
+        .btn { width: 85%; padding: 16px; background: linear-gradient(135deg, #00C853, #00E676); color: white; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 5px 15px rgba(0,200,83,0.3); }
+        
+        /* 2. 答题页 */
+        .quiz-view { display: none; min-height: 100vh; background: #fff; }
+        .quiz-head { position: sticky; top: 0; background: rgba(255,255,255,0.95); padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .progress-bar { width: 100px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
+        .opt-btn { background: #fff; border: 1px solid #eee; padding: 18px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; }
+        .opt-btn:active { background: #E8F5E9; border-color: var(--primary); transform: scale(0.99); }
+        .opt-circle { width: 20px; height: 20px; border: 2px solid #ccc; border-radius: 50%; margin-right: 15px; }
+
+        /* 3. 报告页 (深度升级) */
+        .report-view { display: none; }
+        .res-hero { background: var(--primary); color: white; padding: 40px 20px 70px; text-align: center; border-radius: 0 0 40px 40px; }
+        .talent-badge { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 13px; letter-spacing: 1px; }
+        .talent-main { font-size: 36px; font-weight: 800; margin: 15px 0 5px; }
+        
+        .card { background: #fff; border-radius: 16px; padding: 25px; margin: 0 20px 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
+        .card-t { font-size: 18px; font-weight: bold; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 20px; color: #333; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 维度胶囊 */
+        .dim-capsule { display: inline-block; background: #E8F5E9; color: var(--text); padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 0 5px 5px 0; font-weight: bold; }
+        
+        /* 深度分析列表 */
+        .detail-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
+        .detail-item:last-child { border: none; }
+        .detail-label { font-weight: bold; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; }
+        .detail-icon { margin-right: 8px; font-size: 18px; }
+        .detail-text { font-size: 14px; color: #555; text-align: justify; }
+
+        /* 排行榜 */
+        .rank-row { display: flex; align-items: center; margin-bottom: 10px; }
+        .rank-name { width: 70px; font-size: 13px; font-weight: bold; color: #555; }
+        .rank-bar { flex: 1; height: 8px; background: #f0f0f0; border-radius: 4px; margin: 0 10px; overflow: hidden; }
+        .rank-fill { height: 100%; background: var(--primary); border-radius: 4px; }
+        .rank-val { font-size: 12px; color: #999; width: 30px; text-align: right; }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="p1" class="auth-view">
+        <div class="auth-icon">🧬</div>
+        <h2 style="margin:0 0 10px; color:#2E7D32;">天赋潜能深度测评</h2>
+        <p style="color:#666; font-size:14px; margin:0;">40道深度验证题 · 挖掘你的出厂设置</p>
+        
+        <input id="code" class="input-key" placeholder="请输入授权码">
+        
+        <button class="btn" onclick="start()">开始探索</button>
+        <p id="err" style="color:#E74C3C; font-size:12px; margin-top:15px; display:none">授权码错误</p>
+    </div>
+
+    <div id="p2" class="quiz-view">
+        <div class="quiz-head">
+            <span style="font-weight:bold; color:var(--primary)">Q<span id="idx">1</span></span>
+            <div class="progress-bar"><div id="p-fill" class="progress-fill"></div></div>
+            <span style="color:#999; font-size:12px;">/ 40</span>
+        </div>
+        <div style="padding: 30px 20px;">
+            <h3 id="q-txt" style="font-size:20px; margin-bottom:30px; font-weight:bold;">加载中...</h3>
+            <div id="opt-area"></div>
+        </div>
+    </div>
+
+    <div id="p3" class="report-view">
+        <div class="res-hero">
+            <span class="talent-badge">您的核心天赋</span>
+            <div class="talent-main" id="r-top">分析中...</div>
+            <div id="r-sub" style="font-size:14px; opacity:0.9"></div>
+        </div>
+
+        <div class="report-body" style="position:relative; top:-30px;">
+            
+            <div class="card" style="text-align:center;">
+                <div class="card-t">天赋能量场</div>
+                <div id="radar-box"></div>
+                <div style="font-size:12px; color:#999; margin-top:10px;">* 图表面积越大，说明您的综合潜能越强</div>
+            </div>
+
+            <div class="card">
+                <div class="card-t">📖 核心天赋说明书</div>
+                
+                <div class="detail-item">
+                    <div class="detail-label"><span class="detail-icon">💰</span>天赋变现指南</div>
+                    <div class="detail-text" id="r-career"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label"><span class="detail-icon">⚡</span>高光时刻 (Flow)</div>
+                    <div class="detail-text" id="r-flow"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label"><span class="detail-icon">📚</span>最佳学习策略</div>
+                    <div class="detail-text" id="r-learn"></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label"><span class="detail-icon">⚠️</span>潜在盲点与避坑</div>
+                    <div class="detail-text" id="r-blind"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-t">十大维度全解析</div>
+                <div id="rank-list"></div>
+            </div>
+
+            <button class="btn" style="background:#fff; color:var(--primary); border:1px solid var(--primary);" onclick="location.reload()">重新测试</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ===================================
+    // 🔑 设置你的密码 (这里记得设置！)
+    // ===================================
+    const PASSWORD = "10678";
+    // ===================================
+
+    // 10大维度，40题 (每个维度4题)
+    const QS = [
+        // 第一组
+        {t:"1. 我很容易记住读过或听过的词汇、故事。", k:"A"},
+        {t:"2. 我喜欢做逻辑推理题，或者思考“为什么”。", k:"B"},
+        {t:"3. 闭上眼，我脑海中能清晰浮现出物体的形状和位置。", k:"C"},
+        {t:"4. 我经常独处，思考关于人生意义、价值观等深层问题。", k:"D"},
+        {t:"5. 在聚会中，我能敏锐察觉到别人的情绪变化。", k:"E"},
+        {t:"6. 我很难长时间坐着不动，喜欢通过动作来表达自己。", k:"F"},
+        {t:"7. 我能轻易哼出只听过一两次的旋律。", k:"G"},
+        {t:"8. 我喜欢观察植物、动物或天文现象。", k:"H"},
+        {t:"9. 我经常会有一些天马行空、别人想不到的点子。", k:"I"},
+        {t:"10. 我对色彩搭配、构图布局非常敏感。", k:"J"},
+        // 第二组
+        {t:"11. 我擅长用文字或语言精准表达复杂的观点。", k:"A"},
+        {t:"12. 做事时，我习惯先分类、排序或制定量化指标。", k:"B"},
+        {t:"13. 我看地图很轻松，很少迷路。", k:"C"},
+        {t:"14. 我清楚自己的优缺点，并能自我调节情绪。", k:"D"},
+        {t:"15. 朋友遇到困难时，经常找我倾诉和寻求建议。", k:"E"},
+        {t:"16. 我擅长手工、跳舞、运动或乐器操作。", k:"F"},
+        {t:"17. 听到音乐时，我会不自觉地打节拍或身体律动。", k:"G"},
+        {t:"18. 我能分辨出不同种类的鸟叫声、树叶形状或汽车型号。", k:"H"},
+        {t:"19. 面对难题，我总能找到非传统的解决方法。", k:"I"},
+        {t:"20. 看到不协调的设计或混乱的摆设，我会感到难受。", k:"J"},
+        // 第三组
+        {t:"21. 我喜欢玩文字游戏（如填字、接龙、双关语）。", k:"A"},
+        {t:"22. 我对科学实验、投资理财或因果关系很感兴趣。", k:"B"},
+        {t:"23. 我喜欢拼图、搭积木、画画或玩3D游戏。", k:"C"},
+        {t:"24. 我有写日记或定期复盘反思的习惯。", k:"D"},
+        {t:"25. 我擅长协调团队冲突，凝聚人心。", k:"E"},
+        {t:"26. 学习新技能时，我更喜欢动手试而不是看说明书。", k:"F"},
+        {t:"27. 我对声音的音调、音色非常敏感，能听出走调。", k:"G"},
+        {t:"28. 环保、生态平衡、露营等活动能引起我的兴趣。", k:"H"},
+        {t:"29. 我不喜欢按部就班，喜欢打破常规和创新。", k:"I"},
+        {t:"30. 我喜欢逛美术馆、看展或欣赏摄影作品。", k:"J"},
+        // 第四组
+        {t:"31. 在争论中，我善于捕捉对方的语病或逻辑漏洞。", k:"A"},
+        {t:"32. 我喜欢心算，或者对数字非常敏感。", k:"B"},
+        {t:"33. 即使到了新环境，我也能很快搞清楚方向。", k:"C"},
+        {t:"34. 我很享受一个人的时光，不会感到孤独。", k:"D"},
+        {t:"35. 我能轻易融入各种社交圈子，和不同人打交道。", k:"E"},
+        {t:"36. 我通过身体接触（如拥抱、握手）能感受到更多信息。", k:"F"},
+        {t:"37. 音乐能极大地影响我的情绪。", k:"G"},
+        {t:"38. 我喜欢收集标本、石头或其他自然物品。", k:"H"},
+        {t:"39. 别人常评价我“脑洞大”或“不按常理出牌”。", k:"I"},
+        {t:"40. 我对穿搭、家居布置有自己独特的品味。", k:"J"}
+    ];
+
+    // 深度解读数据库
+    const DIMS = {
+        "A": {
+            name:"语言天赋", color:"#FF6B6B", 
+            career:"自媒体、作家、律师、教师、文案策划。",
+            flow:"在阅读引人入胜的书籍、进行激烈的辩论或写作时。",
+            learn:"【听读型】通过阅读书籍、听讲座或复述给别人听来学习效率最高。",
+            blind:"可能因为过于纠结字眼而忽视了行动；有时会显得喋喋不休。"
+        },
+        "B": {
+            name:"逻辑天赋", color:"#4ECDC4", 
+            career:"程序员、会计、金融分析师、科学家、侦探。",
+            flow:"在解决复杂的数学题、编写代码或进行逻辑推演时。",
+            learn:"【逻辑型】喜欢寻找规律、分类和因果关系。适合通过图表和思维导图学习。",
+            blind:"可能显得过于理性冷漠，忽视他人的情感需求；容易陷入“分析瘫痪”。"
+        },
+        "C": {
+            name:"空间天赋", color:"#45B7D1", 
+            career:"建筑师、飞行员、摄影师、向导、3D建模师。",
+            flow:"在画画、拼装模型、看地图导航或进行空间想象时。",
+            learn:"【视觉型】使用图像、视频、图表和色彩标记来辅助记忆。",
+            blind:"可能容易走神，沉浸在自己的想象世界中；不擅长处理纯文字信息。"
+        },
+        "D": {
+            name:"内省天赋", color:"#96CEB4", 
+            career:"心理咨询师、哲学家、独立研究员、神学家。",
+            flow:"在独处冥想、写日记、深度思考人生问题时。",
+            learn:"【独立型】需要安静的环境，适合自学，按照自己的节奏进行。",
+            blind:"容易过度自我关注，导致社交孤立；有时会陷入消极情绪的循环。"
+        },
+        "E": {
+            name:"人际天赋", color:"#FFEEAD", 
+            career:"销售、公关、HR、社群运营、CEO。",
+            flow:"在组织聚会、帮助他人解决冲突或进行团队协作时。",
+            learn:"【社交型】通过与他人讨论、教别人或小组合作来学习。",
+            blind:"容易受他人评价影响；可能因为过度关注别人而忽视自己的需求。"
+        },
+        "F": {
+            name:"动觉天赋", color:"#FF9F43", 
+            career:"运动员、外科医生、舞蹈家、工匠、演员。",
+            flow:"在运动、跳舞、表演或进行精密的手工操作时。",
+            learn:"【体验型】必须动手操作、实地考察或通过身体律动来记忆。",
+            blind:"很难长时间静坐听讲；可能因为冲动而先行动后思考。"
+        },
+        "G": {
+            name:"音乐天赋", color:"#54A0FF", 
+            career:"歌手、作曲家、音响师、乐评人、语言治疗师。",
+            flow:"在听音乐、唱歌、演奏乐器或创作旋律时。",
+            learn:"【听觉/韵律型】将知识编成口诀、歌曲，或在背景音乐下学习。",
+            blind:"对噪音极度敏感，容易分心；可能情绪起伏较大。"
+        },
+        "H": {
+            name:"自然天赋", color:"#786FA6", 
+            career:"兽医、地质学家、环保人士、园艺师、生物学家。",
+            flow:"在户外探险、照顾宠物、观察星空或种植花草时。",
+            learn:"【自然型】在户外环境中学习效果最好，喜欢通过观察实物来理解。",
+            blind:"在封闭的现代化办公环境中容易感到窒息和焦虑。"
+        },
+        "I": {
+            name:"创造天赋", color:"#F78FB3", 
+            career:"创业者、广告创意、产品经理、策划、发明家。",
+            flow:"在头脑风暴、构思新点子或解决棘手难题时。",
+            learn:"【探索型】喜欢开放式的任务，讨厌死记硬背和标准答案。",
+            blind:"想法多落地少，容易三分钟热度；难以忍受重复性工作。"
+        },
+        "J": {
+            name:"美学天赋", color:"#63Cdda", 
+            career:"UI设计师、造型师、买手、艺术策展、陈列师。",
+            flow:"在欣赏艺术品、进行搭配设计或整理房间使其美观时。",
+            learn:"【感官型】需要教材排版美观，对学习环境的颜值有要求。",
+            blind:"过于追求完美和细节，导致效率降低；对不美的事物容忍度低。"
+        }
+    };
+
+    let scores = { A:0, B:0, C:0, D:0, E:0, F:0, G:0, H:0, I:0, J:0 };
+    let cur = 0;
+
+    function start() {
+        if(document.getElementById('code').value.trim() === PASSWORD) {
+            document.getElementById('p1').style.display='none';
+            document.getElementById('p2').style.display='block';
+            renderQ();
+        } else {
+            document.getElementById('err').style.display='block';
+        }
+    }
+
+    function renderQ() {
+        let q = QS[cur];
+        document.getElementById('idx').innerText = cur+1;
+        document.getElementById('q-txt').innerText = q.t;
+        // 更新进度条
+        document.getElementById('p-fill').style.width = ((cur+1)/QS.length)*100 + "%";
+        
+        let area = document.getElementById('opt-area');
+        area.innerHTML = '';
+        
+        // 5分制
+        const opts = [
+            {t:"非常不符合", s:1}, {t:"不太符合", s:2}, {t:"一般", s:3}, {t:"比较符合", s:4}, {t:"非常符合", s:5}
+        ];
+        
+        opts.forEach(opt => {
+            let btn = document.createElement('div');
+            btn.className = 'opt-btn';
+            btn.innerHTML = `<div class="opt-circle"></div>${opt.t}`;
+            btn.onclick = () => {
+                scores[q.k] += opt.s;
+                // 点击反馈
+                btn.style.background = "#E8F5E9";
+                btn.style.borderColor = "#00C853";
+                setTimeout(() => {
+                    if(++cur < QS.length) renderQ(); else showReport();
+                }, 100);
+            }
+            area.appendChild(btn);
+        });
+        window.scrollTo(0,0);
+    }
+
+    function showReport() {
+        document.getElementById('p2').style.display='none';
+        document.getElementById('p3').style.display='block';
+
+        let sorted = Object.keys(scores).sort((a,b) => scores[b] - scores[a]);
+        let top1 = sorted[0];
+        let top2 = sorted[1];
+
+        // 核心结果
+        document.getElementById('r-top').innerText = DIMS[top1].name + " & " + DIMS[top2].name;
+        document.getElementById('r-sub').innerText = "辅助优势：" + DIMS[sorted[2]].name;
+
+        // 深度解读填充
+        document.getElementById('r-career').innerHTML = DIMS[top1].career + "<br>" + DIMS[top2].career;
+        document.getElementById('r-flow').innerHTML = DIMS[top1].flow;
+        document.getElementById('r-learn').innerHTML = DIMS[top1].learn;
+        document.getElementById('r-blind').innerHTML = DIMS[top1].blind + " 此外，" + DIMS[top2].blind;
+
+        // 排行榜
+        let rankHtml = "";
+        sorted.forEach(k => {
+            let val = scores[k];
+            let pct = (val/20)*100; // 满分20 (4题*5分)
+            let color = DIMS[k].color;
+            rankHtml += `
+                <div class="rank-row">
+                    <div class="rank-name">${DIMS[k].name}</div>
+                    <div class="rank-bar"><div class="rank-fill" style="width:${pct}%; background:${color}"></div></div>
+                    <div class="rank-val">${val}</div>
+                </div>
+            `;
+        });
+        document.getElementById('rank-list').innerHTML = rankHtml;
+
+        // 雷达图 (纯SVG)
+        drawRadar(scores);
+        window.scrollTo(0,0);
+    }
+
+    function drawRadar(s) {
+        let keys = Object.keys(s); // A-J
+        let count = keys.length;
+        let r = 80, c = 120;
+        let poly = "", axis = "", labels = "";
+        
+        for(let i=0; i<count; i++) {
+            let key = keys[i];
+            let val = s[key];
+            let ratio = val / 20; 
+            let angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+            
+            let x = c + Math.cos(angle) * (r * ratio);
+            let y = c + Math.sin(angle) * (r * ratio);
+            poly += (i===0 ? "M" : "L") + `${x},${y} `;
+            
+            let ax = c + Math.cos(angle) * r;
+            let ay = c + Math.sin(angle) * r;
+            axis += `<line x1="${c}" y1="${c}" x2="${ax}" y2="${ay}" stroke="#eee" stroke-width="1"/>`;
+            
+            let lx = c + Math.cos(angle) * (r + 20);
+            let ly = c + Math.sin(angle) * (r + 20);
+            let anchor = "middle";
+            if(i===0 || i===5) anchor="middle"; else if(i<5) anchor="start"; else anchor="end";
+            
+            labels += `<text x="${lx}" y="${ly}" font-size="10" fill="#666" text-anchor="${anchor}" dominant-baseline="middle">${DIMS[key].name[0]}</text>`;
+        }
+        poly += "Z";
+
+        let grid = "";
+        [0.33, 0.66, 1].forEach(scale => {
+            let gPoly = "";
+            for(let i=0; i<count; i++) {
+                let angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+                let gx = c + Math.cos(angle) * (r * scale);
+                let gy = c + Math.sin(angle) * (r * scale);
+                gPoly += (i===0 ? "M" : "L") + `${gx},${gy} `;
+            }
+            gPoly += "Z";
+            grid += `<path d="${gPoly}" fill="none" stroke="#f0f0f0" stroke-width="1"/>`;
+        });
+
+        document.getElementById('radar-box').innerHTML = `
+            <svg width="240" height="240" viewBox="0 0 240 240">
+                ${grid}
+                ${axis}
+                <path d="${poly}" fill="rgba(0, 200, 83, 0.3)" stroke="#00C853" stroke-width="2"/>
+                ${labels}
+            </svg>
+        `;
+    }
+</script>
+</body>
+</html>
