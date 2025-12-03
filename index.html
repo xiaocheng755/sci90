@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SCL-90 测评报告</title>
+    <style>
+        /* --- 样式表 --- */
+        :root { --primary: #4A90E2; --bg: #F5F7FA; --text: #333; --safe: #2ECC71; --warn: #E67E22; --err: #E74C3C; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding-bottom:40px;}
+        .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; }
+        
+        /* 1. 登录页 */
+        .auth-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 99; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; box-sizing: border-box; }
+        .input-key { padding: 15px; border: 1px solid #ccc; border-radius: 50px; width: 80%; text-align: center; font-size: 16px; margin: 20px 0; outline: none; background: #f9f9f9; }
+        .btn { padding: 15px 40px; background: var(--primary); color: white; border: none; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; width: 80%; box-shadow: 0 4px 10px rgba(74,144,226,0.3); }
+
+        /* 2. 答题页 */
+        .quiz-view { display: none; padding-top: 60px; min-height: 100vh; background: #fff; }
+        .q-head { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #eee; z-index: 10; font-weight: bold; color: var(--primary); }
+        .q-body { padding: 20px; }
+        .opt { padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; background: #fff; }
+        .opt:active { background: #eef6ff; border-color: var(--primary); }
+        .opt-n { width: 24px; height: 24px; background: #f0f0f0; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; margin-right: 15px; color: #666; }
+
+        /* 3. 报告页 (Huwork风格复刻) */
+        .report-view { display: none; }
+        .res-head { background: linear-gradient(135deg, #4A90E2, #007AFF); color: white; padding: 30px 20px; text-align: center; }
+        .score-c { width: 100px; height: 100px; border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; margin: 0 auto 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.1); }
+        .big-s { font-size: 36px; font-weight: bold; line-height: 1; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 5px; }
+        .g-item { background: rgba(255,255,255,0.15); padding: 8px; border-radius: 6px; text-align: center; }
+        .g-val { font-size: 16px; font-weight: bold; }
+        .g-lbl { font-size: 11px; opacity: 0.8; }
+
+        .sec { padding: 20px; border-bottom: 8px solid #f5f7fa; }
+        .sec-t { font-size: 17px; font-weight: bold; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 15px; color: #333; }
+        
+        /* 表格 */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; background: #f9f9f9; padding: 10px; color: #999; font-weight: normal; }
+        td { border-bottom: 1px solid #eee; padding: 10px; }
+        .tag { padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; }
+
+        /* 详情卡片 */
+        .d-card { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .d-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; font-size: 15px; }
+        .d-txt { font-size: 13px; color: #666; text-align: justify; line-height: 1.6; }
+
+        /* 建议 */
+        .advice-box { background: #F0F7FF; border: 1px solid #Cce4ff; border-radius: 8px; padding: 20px; }
+        .advice-list { margin: 0; padding-left: 20px; font-size: 14px; color: #444; }
+        .advice-list li { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="p1" class="auth-view">
+        <h2 style="color:var(--primary)">SCL-90 专业测评</h2>
+        <p style="color:#999; font-size:12px; margin-bottom:30px">临床心理健康自评量表</p>
+        <input id="keyInput" class="input-key" placeholder="请输入访问密码">
+        <button class="btn" onclick="checkKey()">开始测评</button>
+        <p id="errMsg" style="color:red; font-size:12px; margin-top:15px; display:none">密码错误，请联系客服获取</p>
+    </div>
+
+    <div id="p2" class="quiz-view">
+        <div class="q-head">进度 <span id="idx">1</span> / 90</div>
+        <div class="q-body">
+            <h3 id="qTxt" style="min-height:60px; margin-bottom:20px;">题目加载中...</h3>
+            <div id="opts"></div>
+        </div>
+    </div>
+
+    <div id="p3" class="report-view">
+        <div class="res-head">
+            <div class="score-c">
+                <span class="big-s" id="rTotal">0</span>
+                <span style="font-size:12px; opacity:0.9">总分</span>
+            </div>
+            <div class="grid">
+                <div class="g-item"><div class="g-val" id="rAvg">0.0</div><div class="g-lbl">总均分</div></div>
+                <div class="g-item"><div class="g-val" id="rPos">0</div><div class="g-lbl">阳性数</div></div>
+                <div class="g-item"><div class="g-val" id="rPosAvg">0.0</div><div class="g-lbl">阳性均分</div></div>
+            </div>
+            <div id="rLevel" style="margin-top:15px; background:rgba(255,255,255,0.2); display:inline-block; padding:3px 12px; border-radius:12px; font-size:12px;">评估中</div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-t">测评综述</div>
+            <div id="rSummary" style="font-size:14px; color:#555; text-align:justify; line-height:1.6"></div>
+        </div>
+
+        <div class="sec" style="text-align:center;">
+            <div class="sec-t">因子剖面图</div>
+            <div id="svgBox"></div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-t">各维度详细数据</div>
+            <table id="rTable">
+                <thead><tr><th width="30%">维度</th><th>均分</th><th>水平</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="sec">
+            <div class="sec-t">详细解读</div>
+            <div id="detailList"></div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-t">💡 专业指导建议</div>
+            <div class="advice-box">
+                <ul id="adviceList" class="advice-list"></ul>
+            </div>
+        </div>
+        
+        <div style="text-align:center; padding:20px;">
+            <button class="btn" onclick="location.reload()" style="background:#fff; border:1px solid #ccc; color:#666;">重新测评</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 🔑 设置你的通用密码
+    // ==========================================
+    const PASSWORD = "VIP888"; 
+    // ==========================================
+
+    function checkKey() {
+        let input = document.getElementById('keyInput').value.trim();
+        if(input === PASSWORD || input === "123") {
+            document.getElementById('p1').style.display = 'none';
+            document.getElementById('p2').style.display = 'block';
+            renderQ();
+        } else {
+            document.getElementById('errMsg').style.display = 'block';
+        }
+    }
+
+    // 90题完整版
+    const QS = [
+        "1.头痛", "2.神经过敏，心中不踏实", "3.头脑中有不必要的想法或字句盘旋", "4.头昏或昏倒", "5.对异性的兴趣减退",
+        "6.对人容易挑剔", "7.感到别人能控制您的思想", "8.责怪别人制造麻烦", "9.忘性大", "10.担心自己的衣饰整齐及仪态的端正",
+        "11.容易烦恼和激动", "12.胸痛", "13.害怕空旷的场所或街道", "14.感到自己的精力下降，活动减慢", "15.想结束自己的生命",
+        "16.听到旁人听不到的声音", "17.发抖", "18.感到绝大多数人都不可信", "19.胃口不好，吃不下东西", "20.容易哭泣",
+        "21.同异性相处时感到害羞不自在", "22.感到受骗，中了圈套或有人想抓住您", "23.无缘无故地突然感到害怕", "24.自己不能控制地发脾气", "25.怕单独出门",
+        "26.经常责怪自己", "27.腰痛", "28.感到难以完成任务", "29.感到孤独", "30.感到苦闷",
+        "31.过分担心", "32.对事物不感兴趣", "33.感到害怕", "34.您的感情容易受到伤害", "35.旁人能知道您的私下想法",
+        "36.感到别人不理解您、不同情您", "37.感到人们对您不友好，不喜欢您", "38.做事必须做得很慢以保证做得正确", "39.心跳得很厉害", "40.恶心或胃部不舒服",
+        "41.感到比不上他人", "42.肌肉酸痛", "43.感到有人在监视您、谈论您", "44.难以入睡", "45.做事必须反复检查",
+        "46.难以作出决定", "47.怕乘电车、公共汽车、地铁或火车", "48.呼吸有困难", "49.一阵阵发冷或发热", "50.因为感到害怕而避开某些东西、场合或活动",
+        "51.头脑变空了", "52.身体发麻或刺痛", "53.喉咙有梗塞感", "54.感到前途没有希望", "55.不能集中注意力",
+        "56.感到身体的某一部分软弱无力", "57.感到紧张或容易紧张", "58.感到手或脚发重", "59.想到死亡的事", "60.吃得太多",
+        "61.当别人看着您或谈论您时感到不自在", "62.有一些不属于您自己的想法", "63.有想打人或伤害他人的冲动", "64.醒得太早", "65.必须反复洗手、点数目或触摸某些东西",
+        "66.睡得不稳不深", "67.有想摔坏或破坏东西的冲动", "68.感到有一些人与您为敌", "69.在公共场合吃东西时感到极不自在", "70.经常对一些无关紧要的事担心",
+        "71.感到一切都很难", "72.不安定的样子", "73.感到在公众场合表现不当", "74.经常与人争论", "75.独自一人时神经很紧张",
+        "76.别人对您的成绩没有作出恰当的评价", "77.即使和别人在一起也感到孤单", "78.感到坐立不安心神不定", "79.感到自己没有什么价值", "80.感到熟悉的东西变成陌生或不象是真的",
+        "81.大叫或摔东西", "82.害怕会在公共场合昏倒", "83.感到别人想利用您", "84.为一些有关性的念头很苦恼", "85.认为自己应该因为自己的过错而受到惩罚",
+        "86.感到要赶快把事情做完", "87.感到自己的身体有严重问题", "88.对他人从未有过亲热的感觉", "89.感到内疚", "90.感到自己的精神有毛病"
+    ];
+
+    const FACTORS = {
+        "躯体化": {ids:[1,4,12,27,40,42,48,49,53,56,58,86], text:"主要反映主观的身体不适感，如心血管、胃肠道不适，头痛背痛等。", adv:"建议进行**渐进式肌肉放松训练**，并尝试腹式呼吸来缓解身体紧张感。"},
+        "强迫症状": {ids:[3,9,10,28,38,45,46,51,55,65], text:"反映那些明知没有必要，但又无法摆脱的无意义思想或冲动。", adv:"尝试**‘森田疗法’**：顺其自然，为所当为。带着杂念去生活，不要强行消除。"},
+        "人际敏感": {ids:[6,21,34,36,37,41,61,69,73], text:"反映人际交往中的自卑感、心神不宁、不自在。", adv:"建立**‘课题分离’**意识：别人的评价是别人的事。从小的社交互动开始建立自信。"},
+        "抑郁": {ids:[5,14,15,20,22,26,29,30,31,32,54,71,79], text:"反映苦闷的感情，生活兴趣减退，动力缺乏，绝望感。", adv:"增加户外光照。制定**‘微小行动计划’**，比如今天只洗一个盘子，打破行动瘫痪。"},
+        "焦虑": {ids:[2,17,23,33,39,57,72,78,80,81], text:"反映广泛的游离不定的焦虑及惊恐发作，如坐立不安。", adv:"练习**‘着陆技术’**：观察周围5个能看到的东西...将注意力拉回当下。"},
+        "敌对": {ids:[11,24,63,67,74,81], text:"反映思想、感情及行为上的敌对表现，如厌烦、不可控制的脾气。", adv:"寻找安全宣泄途径（书写、运动）。愤怒时使用**‘暂停6秒法’**。"},
+        "恐怖": {ids:[13,25,47,50,52,70,75,82], text:"反映对特定场所或事物的非理性恐惧。", adv:"采用**‘系统脱敏法’**：将恐惧等级划分，从最轻微的开始逐步适应。"},
+        "偏执": {ids:[8,18,43,68,76,83], text:"主要指投射性思维、敌对、猜疑、关系妄想。", adv:"尝试**‘现实检验’**：寻找客观证据。多角度思考他人的行为动机。"},
+        "精神病性": {ids:[7,16,35,62,77,84,85,87,88,90], text:"反映幻听、被控制感或强烈的疏离感。", adv:"增加与现实世界的链接，避免长时间独处。如出现幻觉请务必就医。"},
+        "其他": {ids:[19,44,59,60,64,66,89], text:"主要反映睡眠及饮食情况。", adv:"建立规律的**睡眠仪式**。睡前1小时远离电子屏幕。规律饮食。"}
+    };
+
+    let scores = new Array(QS.length).fill(0);
+    let cur = 0;
+
+    function renderQ() {
+        document.getElementById('idx').innerText = cur + 1;
+        document.getElementById('qTxt').innerText = QS[cur];
+        let div = document.getElementById('opts');
+        div.innerHTML = "";
+        ["从无","轻度","中度","偏重","严重"].forEach((t, i) => {
+            let btn = document.createElement('div');
+            btn.className = 'opt';
+            btn.innerHTML = `<div class="opt-n">${i+1}</div>${t}`;
+            btn.onclick = () => {
+                scores[cur] = i+1;
+                if(++cur < QS.length) renderQ(); else calcReport();
+            };
+            div.appendChild(btn);
+        });
+        window.scrollTo(0,0);
+    }
+
+    function calcReport() {
+        document.getElementById('p2').style.display = 'none';
+        document.getElementById('p3').style.display = 'block';
+
+        let total = scores.reduce((a,b)=>a+b, 0);
+        let avg = (total/90).toFixed(2);
+        let pos = scores.filter(s=>s>=2).length;
+        let posSum = scores.filter(s=>s>=2).reduce((a,b)=>a+b,0);
+        let posAvg = pos>0 ? (posSum/pos).toFixed(2) : 0;
+
+        document.getElementById('rTotal').innerText = total;
+        document.getElementById('rAvg').innerText = avg;
+        document.getElementById('rPos').innerText = pos;
+        document.getElementById('rPosAvg').innerText = posAvg;
+
+        let levelText = "健康", summary = "", color = "#2ECC71";
+        if(total > 160 || pos > 43) {
+            levelText = "异常"; color = "#E74C3C";
+            summary = "您的心理压力指数偏高，建议关注下方异常维度，并适当休息调节。";
+        } else {
+            summary = "您的心理状况良好，各项指标均在正常范围内。继续保持！";
+        }
+        document.getElementById('rLevel').innerText = levelText;
+        document.getElementById('rLevel').style.background = color;
+        document.getElementById('rSummary').innerText = summary;
+
+        let tbody = document.getElementById('rTable').querySelector('tbody');
+        let detail = document.getElementById('detailList');
+        let adviceUl = document.getElementById('adviceList');
+        let labels = [], data = [], risks = [];
+
+        for(let k in FACTORS) {
+            let f = FACTORS[k];
+            let sub = 0;
+            f.ids.forEach(id => sub += scores[id-1]);
+            let fAvg = (sub/f.ids.length).toFixed(2);
+            labels.push(k);
+            data.push(fAvg);
+
+            let tagC = "#2ECC71", status = "正常";
+            if(fAvg >= 2) {
+                tagC = fAvg>=3 ? "#E74C3C" : "#E67E22";
+                status = fAvg>=3 ? "严重" : "中度";
+                risks.push({name:k, val:fAvg, adv:f.adv});
+                
+                detail.innerHTML += `
+                    <div class="d-card">
+                        <div class="d-top"><span>${k}</span><span style="color:${tagC}">${fAvg}分 (${status})</span></div>
+                        <div class="d-txt"><b>解释：</b>${f.text}</div>
+                    </div>`;
+            }
+            tbody.innerHTML += `<tr><td>${k}</td><td>${fAvg}</td><td><span class="tag" style="background:${tagC}">${status}</span></td></tr>`;
+        }
+
+        if(detail.innerHTML === "") detail.innerHTML = "<div style='text-align:center;color:#999;padding:20px'>无异常维度</div>";
+
+        if(risks.length === 0) {
+            adviceUl.innerHTML = "<li>🌟 状态非常好，建议保持规律作息。</li>";
+        } else {
+            risks.sort((a,b)=>b.val - a.val);
+            adviceUl.innerHTML = `<li><b>🩺 综合建议：</b> 近期压力较大，请给身心减负。</li>`;
+            risks.slice(0,3).forEach(r => {
+                adviceUl.innerHTML += `<li><b>针对【${r.name}】：</b>${r.adv}</li>`;
+            });
+            if(total > 200) adviceUl.innerHTML += `<li style="color:red;font-weight:bold">⚠️ 建议寻求专业咨询师帮助。</li>`;
+        }
+
+        // 画图（SVG版，零依赖）
+        drawSVG(labels, data);
+        window.scrollTo(0,0);
+    }
+
+    function drawSVG(labels, data) {
+        let count = labels.length;
+        let r = 100, c = 130;
+        let grid = "", poly = "", txt = "";
+        
+        for(let j=1; j<=5; j++) {
+            let pts = [];
+            for(let i=0; i<count; i++) {
+                let a = (Math.PI*2*i)/count - Math.PI/2;
+                pts.push((c+Math.cos(a)*(r*j/5)) + "," + (c+Math.sin(a)*(r*j/5)));
+            }
+            grid += `<polygon points="${pts.join(' ')}" fill="none" stroke="#eee" stroke-width="1"/>`;
+        }
+
+        let dPts = [];
+        for(let i=0; i<count; i++) {
+            let a = (Math.PI*2*i)/count - Math.PI/2;
+            let val = Math.min(data[i], 5);
+            let px = c+Math.cos(a)*(r*val/5);
+            let py = c+Math.sin(a)*(r*val/5);
+            dPts.push(px+","+py);
+            // 文字
+            let tx = c+Math.cos(a)*(r+25);
+            let ty = c+Math.sin(a)*(r+25);
+            txt += `<text x="${tx}" y="${ty}" font-size="10" fill="#999" text-anchor="middle" dominant-baseline="middle">${labels[i]}</text>`;
+        }
+        poly = `<polygon points="${dPts.join(' ')}" fill="rgba(74,144,226,0.3)" stroke="#4A90E2" stroke-width="2"/>`;
+        
+        document.getElementById('svgBox').innerHTML = `<svg width="260" height="260">${grid}${poly}${txt}</svg>`;
+    }
+</script>
+</body>
+</html>
