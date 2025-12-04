@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>金钱人格财富深度测评</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* ⚫️ 方案：黑金奢华 (最终定稿) */
+        :root { 
+            --primary: #D4AF37;       /* 香槟金 */
+            --bg: #121212;            /* 纯黑背景 */
+            --card: #1E1E1E;          /* 深灰卡片 */
+            --text: #E0E0E0;          /* 银灰文字 */
+            --highlight: #FFD700;     /* 亮金高亮 */
+            --btn-grad: linear-gradient(135deg, #D4AF37, #F1C40F); 
+            --hero-grad: linear-gradient(180deg, #1A1A1A 0%, #000 100%);
+            --accent-red: #FF6B6B;
+            --accent-green: #4ECDC4;
+        }
+
+        body { margin: 0; font-family: "PingFang SC", "Helvetica Neue", sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; padding-bottom: 60px; font-size: 15px; }
+        .container { max-width: 650px; margin: 0 auto; background: #000; min-height: 100vh; }
+
+        /* 1. 登录页 */
+        .auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #2C2C2C 0%, #000000 100%); padding: 30px; text-align: center; }
+        .auth-icon { font-size: 80px; margin-bottom: 20px; text-shadow: 0 0 30px rgba(212, 175, 55, 0.4); animation: pulse 3s infinite; }
+        .auth-title { font-size: 32px; font-weight: 900; color: var(--primary); letter-spacing: 2px; margin-bottom: 5px; background: linear-gradient(to right, #D4AF37, #F1C40F, #D4AF37); -webkit-background-clip: text; color: transparent; }
+        .input-key { padding: 16px; border: 1px solid #444; border-radius: 50px; width: 75%; text-align: center; font-size: 16px; outline: none; margin-top: 40px; background: #222; color: #fff; transition: 0.3s; }
+        .input-key:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        .btn { width: 85%; padding: 16px; background: var(--btn-grad); color: #000; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3); }
+
+        /* 2. 答题页 */
+        .quiz-view { display: none; min-height: 100vh; background: #121212; }
+        .quiz-head { position: sticky; top: 0; background: rgba(18,18,18,0.95); padding: 15px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; z-index: 10; backdrop-filter: blur(10px); }
+        .progress-bar { width: 120px; height: 4px; background: #333; border-radius: 2px; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
+        .opt-btn { background: #1E1E1E; border: 1px solid #333; padding: 22px; border-radius: 12px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; }
+        .opt-btn:active { background: #2A2A2A; border-color: var(--primary); }
+        .opt-circle { width: 20px; height: 20px; border: 2px solid #555; border-radius: 50%; margin-right: 15px; flex-shrink: 0; }
+
+        /* 3. 报告页 */
+        .report-view { display: none; }
+        .res-hero { background: linear-gradient(180deg, #1A1A1A 0%, #000 100%); padding: 50px 20px; text-align: center; border-bottom: 1px solid #333; }
+        .gold-badge { background: linear-gradient(90deg, #D4AF37, #F1C40F); color: #000; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; letter-spacing: 1px; }
+        .main-type { font-size: 48px; font-weight: 900; margin: 20px 0 5px; color: var(--primary); text-shadow: 0 2px 15px rgba(212, 175, 55, 0.4); }
+        .sub-type { color: #888; font-size: 15px; }
+
+        .card { background: var(--card); border-radius: 16px; padding: 28px; margin: 20px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .card-t { font-size: 19px; font-weight: bold; border-left: 3px solid var(--primary); padding-left: 15px; margin-bottom: 25px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 深度文字排版 */
+        .rich-text { font-size: 15px; color: #ccc; text-align: justify; margin-bottom: 10px; line-height: 1.9; }
+        .rich-text p { margin-bottom: 15px; }
+        
+        .list-box { margin-top: 15px; }
+        .list-item { margin-bottom: 18px; display: flex; align-items: start; font-size: 15px; color: #ddd; text-align: justify; line-height: 1.6; }
+        .icon { margin-right: 12px; color: var(--primary); font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+        
+        .cp-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .cp-item { background: #2A2A2A; padding: 18px; border-radius: 10px; text-align: center; border: 1px solid #444; }
+        .cp-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+        .cp-val { font-size: 17px; font-weight: bold; color: var(--primary); }
+
+        .tags-box { display: flex; justify-content: center; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+        .tag-pill { background: #2A2A2A; color: #ccc; padding: 6px 14px; border-radius: 50px; font-size: 12px; border: 1px solid #444; }
+
+        .rank-row { display: flex; align-items: center; margin-bottom: 15px; }
+        .rank-name { width: 70px; font-size: 14px; color: #aaa; }
+        .rank-bar { flex: 1; height: 8px; background: #333; border-radius: 4px; margin: 0 12px; overflow: hidden; }
+        .rank-fill { height: 100%; background: var(--primary); border-radius: 4px; box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        .rank-val { font-size: 13px; color: var(--primary); width: 30px; text-align: right; font-weight: bold; }
+
+        /* 重点文字高亮 */
+        b { color: var(--highlight); font-weight: bold; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="p1" class="auth-view">
+        <div class="auth-icon">🪙</div>
+        <div class="auth-title">金钱人格·财富觉醒</div>
+        <div style="width:50px; height:3px; background:var(--primary); margin:15px auto 35px; box-shadow: 0 0 10px var(--primary);"></div>
+        <p style="color:#888; font-size:15px; margin:0;">32道潜意识探针 · 揭秘你的财富命运</p>
+        <p style="color:#666; font-size:13px; margin-top:8px;">比星座更准的“搞钱说明书”</p>
+        <input id="code" class="input-key" placeholder="请输入授权码">
+        <button class="btn" onclick="start()">解锁我的财富蓝图</button>
+        <p id="err" style="color:var(--accent-red); font-size:13px; margin-top:20px; display:none">⚠️ 授权码错误，请核对</p>
+    </div>
+
+    <div id="p2" class="quiz-view">
+        <div class="quiz-head">
+            <span style="color:var(--primary); font-weight:bold;">Q<span id="idx">1</span></span>
+            <div class="progress-bar"><div id="p-fill" class="progress-fill"></div></div>
+            <span style="color:#666; font-size:12px;">/ 32</span>
+        </div>
+        <div style="padding: 30px 20px;">
+            <h3 id="q-txt" style="font-size:22px; margin-bottom:40px; font-weight:bold; color:#fff; min-height: 80px; line-height: 1.5;">加载中...</h3>
+            <div id="opt-area"></div>
+        </div>
+    </div>
+
+    <div id="p3" class="report-view">
+        <div class="res-hero">
+            <span class="gold-badge">您的核心财富人格</span>
+            <div class="main-type" id="r-name">...</div>
+            <div class="sub-type" id="r-sub">...</div>
+            <div class="tags-box" id="r-tags"></div>
+        </div>
+
+        <div class="report-body" style="position: relative; top: -30px; padding: 0 15px;">
+            
+            <div class="card" style="text-align:center;">
+                <div class="card-t">财富能量分布图</div>
+                <div id="radar-box"></div> 
+            </div>
+
+            <div class="card">
+                <div class="card-t">💡 深度财富画像解析</div>
+                <div id="r-desc" class="rich-text"></div>
+            </div>
+
+            <div class="card" style="border:1px solid rgba(255, 107, 107, 0.3); background:rgba(40, 20, 20, 0.6);">
+                <div class="card-t" style="color:#FF6B6B; border-color:#FF6B6B;">🌑 您的金钱阴影 (Shadow)</div>
+                <div style="font-size:12px; color:#aaa; margin-bottom:20px;">* 这是您潜意识里阻碍财富流动的卡点</div>
+                <div id="r-shadow" class="list-box"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-t">✨ 您的吸金天赋 (Superpower)</div>
+                <div id="r-power" class="list-box"></div>
+            </div>
+
+            <div class="card" style="border:1px solid rgba(78, 205, 196, 0.3); background:rgba(20, 40, 40, 0.6);">
+                <div class="card-t" style="color:var(--accent-green); border-color:var(--accent-green);">🚀 专属搞钱行动指南</div>
+                <div id="r-advice" class="rich-text"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-t">🤝 财富人脉风水局</div>
+                <div class="cp-box">
+                    <div class="cp-item">
+                        <div class="cp-label">💰 您的旺财搭档</div>
+                        <div class="cp-val" id="cp-good" style="color:var(--accent-green)">...</div>
+                    </div>
+                    <div class="cp-item">
+                        <div class="cp-label">💸 您的破财黑洞</div>
+                        <div class="cp-val" id="cp-bad" style="color:var(--accent-red)">...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-t">八大原型得分榜</div>
+                <div id="rank-list"></div>
+            </div>
+
+            <button class="btn" style="color:#fff; margin-bottom:40px; width:100%; box-shadow:none; border:1px solid #333; background:transparent;" onclick="location.reload()">重新测试</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const PASSWORD = "VIP888"; 
+
+    // 8大金钱原型，32题
+    const QS = [
+        {t:"1. 看到银行卡余额增加，是你最大的安全感来源。", k:"A"},
+        {t:"2. 你喜欢送人昂贵的礼物，觉得这代表了你的心意。", k:"B"},
+        {t:"3. 你总是想着如何把生意做大，或者建立自己的商业帝国。", k:"C"},
+        {t:"4. 你经常为了帮助别人（借钱、请客）而导致自己没钱。", k:"D"},
+        {t:"5. 你相信“人脉就是钱脉”，很多机会都是朋友带来的。", k:"E"},
+        {t:"6. 你对钱没什么概念，经常忘记账单或不知道钱花哪了。", k:"F"},
+        {t:"7. 你对投资理财非常感兴趣，喜欢研究如何钱生钱。", k:"G"},
+        {t:"8. 你喜欢高风险高回报的投资，或者总想打破常规赚钱。", k:"H"},
+        {t:"9. 即使有钱，你也很难痛快地花钱享受，总觉得要未雨绸缪。", k:"A"},
+        {t:"10. 你的情绪和花钱挂钩，开心要买，不开心也要买。", k:"B"},
+        {t:"11. 你工作非常努力，甚至是个工作狂，为了赚钱可以牺牲休息。", k:"C"},
+        {t:"12. 你觉得谈钱伤感情，不好意思向别人催债或谈涨价。", k:"D"},
+        {t:"13. 你不需要很努力工作，总有人（伴侣/父母/合伙人）为你提供金钱支持。", k:"E"},
+        {t:"14. 你相信“千金散尽还复来”，比起存钱，更在意当下的快乐。", k:"F"},
+        {t:"15. 你对数字非常敏感，买东西追求极致的性价比。", k:"G"},
+        {t:"16. 你讨厌朝九晚五的死工资，总想搞点副业或创业。", k:"H"},
+        {t:"17. 你非常讨厌浪费，买东西一定要等到打折。", k:"A"},
+        {t:"18. 你很在意别人的目光，希望通过名牌或排场来获得认可。", k:"B"},
+        {t:"19. 你很有领导力，但也容易控制欲过强，希望一切尽在掌握。", k:"C"},
+        {t:"20. 你容易被利用，经常因为心软而遭受金钱损失。", k:"D"},
+        {t:"21. 你擅长资源整合，把不同的人链接在一起创造价值。", k:"E"},
+        {t:"22. 你觉得既然钱带不走，不如用来享受生活体验。", k:"F"},
+        {t:"23. 你擅长发现低估的资产，并能冷静地长期持有。", k:"G"},
+        {t:"24. 你的财务状况大起大落，要么赚大钱，要么亏到底。", k:"H"},
+        {t:"25. 我从小就被教育“赚钱很难”，所以我现在不敢乱花。", k:"A"},
+        {t:"26. 我害怕如果不展示出富有的一面，别人就不会喜欢我。", k:"B"},
+        {t:"27. 只有当我处于掌控地位时，我才感到安全。", k:"C"},
+        {t:"28. 我总觉得我不配拥有很多钱，或者有钱是罪恶的。", k:"D"},
+        {t:"29. 我害怕独自一人面对财务问题，总希望有人依赖。", k:"E"},
+        {t:"30. 只要一谈到财务报表或预算，我就想逃避。", k:"F"},
+        {t:"31. 我对这种“赚小钱”没兴趣，我要么不做，要做就做大的。", k:"H"},
+        {t:"32. 我相信通过复杂的计算和模型，一定能战胜市场。", k:"G"}
+    ];
+
+    // 数据库 (深度文案版 - 200字+解析)
+    const DIMS = {
+        "A": {
+            name:"守财奴", sub:"Accumulator", 
+            tags:["稳健","节俭","恐惧驱动"],
+            desc:"<p>您是金钱世界的守望者，也是最耐心的猎人。对您而言，金钱不仅仅是货币，更是抵御世界不确定性的唯一城墙。您拥有一种与生俱来的天赋，能够在本能的驱使下，将每一分钱都花在刀刃上。</p><p>您从不相信一夜暴富的神话，您相信的是复利、时间和积少成多。在旁人看来，您可能过得有些紧绷，甚至被误解为“吝啬”，但只有您自己知道，那种看着账户数字稳步增长带来的深层安宁感，是任何奢侈品都无法替代的。</p><p>您是所有原型中财务状况最健康的，往往是那种“平时穿优衣库，但买房全款付清”的隐形富豪。您的内心深处，住着一个渴望安全感的孩子，金钱就是您给自己构建的避风港。</p>",
+            shadow:["<b>深层的匮乏感</b>：即使账户里有几百万，您依然会因为买了一杯30块的咖啡而感到内疚。这种对贫穷的非理性恐惧，让您沦为了金钱的奴隶，而不是主人。", "<b>扼杀体验</b>：您为了未来而牺牲了现在，拒绝了旅行、美食和社交，导致生活变得干瘪无味。", "<b>关系紧张</b>：您容易用自己的节俭标准去评判伴侣，因为对方“乱花钱”而引发无休止的争吵。"],
+            power:["<b>强大的自控力</b>：在消费主义盛行的时代，您是极少数能保持清醒、延迟满足的人。", "<b>极高的抗风险能力</b>：当经济危机来临时，别人在裸泳，而您早已备好了诺亚方舟。", "<b>精准的财务直觉</b>：您能敏锐地发现哪里在浪费钱，并迅速堵住漏洞。"],
+            advice:"1. <b>建立“快乐账户”</b>：每月强制划出收入的5%-10%作为“必花资金”，这笔钱必须用来挥霍、享受或送礼，如果不花完就是任务失败。这能帮您练习“花钱”的能力，告诉您的潜意识：花钱是安全的。<br><br>2. <b>转换思维</b>：告诉自己“花钱不是失去，而是交换”。如果您花钱买了一次旅行，您并没有失去钱，您只是把钱变成了美好的回忆存储在脑海里。这是一种能量的转化，而非流失。<br><br>3. <b>投资自己</b>：守财奴最容易犯的错是不舍得花钱学习。请记住，您的大脑是比银行存款回报率更高的资产，知识的复利才是最可怕的。",
+            good:"炼金师 (带你投资)", bad:"挥霍者 (让你心脏受不了)"
+        },
+        "B": {
+            name:"享乐家", sub:"Celebrity", 
+            tags:["奢华","形象","情绪消费"],
+            desc:"<p>您是天生的明星，行走的发光体。在您的潜意识里，金钱的唯一用途就是用来换取“美好”和“关注”。您拥有极佳的审美品味，喜欢一切高品质、有设计感、能彰显身份的东西。</p><p>您相信“这一刻”比“未来”更重要，因此您总是活在当下，尽情享受。您的这种特质让您很容易成为人群的焦点，也容易吸引到高端的资源和人脉。您花钱不仅仅是为了物品本身，更是为了那种被服务、被尊重、被看见的感觉。</p><p>对您来说，贫穷不是没钱，而是生活没有了光彩。您愿意为了那一瞬间的闪耀而倾其所有，因为您认为体验和回忆才是最宝贵的财富。</p>",
+            shadow:["<b>外强中干</b>：您可能外表光鲜亮丽，背地里却背负着信用卡债。您常常为了维持这种光鲜的形象而打肿脸充胖子，内心的空虚感需要不断购物来填补。", "<b>情绪性消费</b>：开心了要买，难过了也要买。购物成了您调节情绪的唯一手段。", "<b>缺乏长远规划</b>：您很难存下钱，甚至觉得谈论储蓄和预算是一件很俗气、很扫兴的事情。"],
+            power:["<b>极强的品牌塑造力</b>：您懂得如何包装自己，非常适合从事需要个人魅力的工作（如主播、销售、时尚博主）。", "<b>吸引财富的磁场</b>：您敢于花钱，也往往能激发出赚大钱的动力。您通常不会一直穷下去，因为您无法忍受低质量的生活。", "<b>慷慨大方</b>：您乐于分享，这为您积攒了不错的人缘。"],
+            advice:"1. <b>视觉化存钱法</b>：因为您是视觉动物，枯燥的数字对您没用。试着把存钱目标具象化，比如“存钱为了去巴黎看秀”，并在家里贴上照片，这能以此激励您储蓄。<br><br>2. <b>冷冻期法则</b>：凡是超过500元的非必需品，必须放入购物车“冷冻”72小时。通常3天后，那种冲动就会消退。这是对抗情绪性消费最有效的手段。<br><br>3. <b>打造被动收入</b>：既然您管不住手，那就致力于创造即使睡觉也有入账的资产，用资产的收益来覆盖您的消费，而不是消耗本金。",
+            good:"守财奴 (帮你管钱)", bad:"颠覆者 (一起破产)"
+        },
+        "C": {
+            name:"统治者", sub:"Ruler", 
+            tags:["野心","商业","掌控"],
+            desc:"<p>您是天生的帝国缔造者。您对金钱有着毫不掩饰的渴望，但这种渴望并非源于贪婪，而是源于对“成就感”和“影响力”的追求。您天生就懂得商业的逻辑，看到一个东西，您首先想到的不是“我喜不喜欢”，而是“这东西怎么赚钱”。</p><p>您工作极其努力，目标远大，甚至可以说是一个不知疲倦的工作狂。在您的世界里，没有“够了”这个词，您总是想要更多、更高、更强。您相信命运掌握在自己手里，金钱就是您改变世界、掌控命运的工具。</p><p>您不甘心做一个普通的打工人，您的内心渴望建立属于自己的商业版图，哪怕现在只是一个小摊位，您的眼光也已经看向了未来。</p>",
+            shadow:["<b>永无止境的焦虑</b>：因为永远觉得不够，您很难停下来享受生活。您把自我价值完全等同于银行卡余额，一旦收入波动，您的自信心也会随之崩塌。", "<b>牺牲健康与亲密关系</b>：在您眼里，陪伴家人的时间可能被视为“低效时间”。您可能赢了世界，却输了生活。", "<b>控制欲过强</b>：您希望一切都在掌控之中，难以容忍失误，这让您的下属或合作伙伴感到窒息。"],
+            power:["<b>非凡的领导力与远见</b>：您能看到别人看不到的商机，并有魄力去执行。", "<b>强大的抗压能力</b>：困难对别人是打击，对您是兴奋剂。您天生适合创业和管理。", "<b>创造财富的能力</b>：您是所有原型中赚钱能力上限最高的，您能为社会创造巨大的价值。"],
+            advice:"1. <b>学会“购买时间”</b>：不要什么事都亲力亲为。学会花钱雇人做琐事，把您的精力集中在最高价值的决策上。学会放权是您从个体户走向企业家的关键。<br><br>2. <b>定义“终点线”</b>：问自己一个深刻的问题：“赚到多少钱我就愿意停下来休息？”如果没有这个终点，您将永远是推石头的西西弗斯。<br><br>3. <b>投资健康</b>：把身体也看作一家公司，如果CEO倒下了，帝国也会崩塌。强制自己休息，这不是浪费时间，而是为了走得更远。",
+            good:"连接者 (给你带资源)", bad:"浪漫派 (让你觉得没出息)"
+        },
+        "D": {
+            name:"滋养者", sub:"Nurturer", 
+            tags:["奉献","心软","牺牲"],
+            desc:"<p>您是金钱世界里的圣母/守护者。您的金钱观建立在“爱”与“给予”之上。您赚钱的动力往往不是为了自己，而是为了给家人更好的生活，或者帮助需要帮助的人。</p><p>您心地善良，慷慨大方，甚至到了没有底线的地步。朋友借钱、家人买房、慈善捐款，您总是冲在最前面。您潜意识里觉得“谈钱伤感情”，甚至觉得拥有太多财富是一种罪恶。您渴望被需要，并习惯通过金钱输出来换取他人的认可和爱。</p><p>您可能是那个总是默默买单的人，是那个借钱给朋友从不好意思催还的人。您的善良是您的铠甲，但也成了您的软肋。</p>",
+            shadow:["<b>毫无底线的牺牲</b>：您经常为了救济别人而让自己陷入财务危机，甚至背负债务。", "<b>金钱上的受害者心态</b>：您容易吸引那些想占便宜的人（“吸血鬼”）。当付出得不到回报时，您会感到委屈和怨恨。", "<b>自我价值感低</b>：您不敢为自己的服务定高价，总觉得不好意思，导致收入远低于您的能力。"],
+            power:["<b>极佳的信用与口碑</b>：您是所有人最信任的伙伴，这种信誉是无价之宝。", "<b>利他带来的好运</b>：因为您乐于助人，往往会在危急时刻得到他人的回馈和帮助。", "<b>极强的服务精神</b>：您非常适合从事教育、医疗、咨询等助人行业，并能从中获得财富。"],
+            advice:"1. <b>先救自己</b>：记住飞机上的安全原则——先给自己戴好氧气面罩，再帮别人。只有您富有且强大了，才能持续地帮助更多人。贫穷的您帮不了任何人。<br><br>2. <b>练习“谈钱”</b>：对着镜子练习说：“我的服务价格是XXX，不打折。”这不仅是赚钱，更是对您自我价值的肯定。<br><br>3. <b>建立边界</b>：学会说“不”。真正的帮助是让人自立，而不是产生依赖。拒绝不合理的借钱请求，保护好自己的财富。",
+            good:"统治者 (保护你的利益)", bad:"连接者 (过度依赖你)"
+        },
+        "E": {
+            name:"连接者", sub:"Connector", 
+            tags:["人脉","资源","依赖"],
+            desc:"<p>您是资源的路由器，人脉的超级节点。您可能自己没有高深的专业技能，也没有巨额的本金，但您拥有最宝贵的资产——关系。您擅长把不同的人、信息、机会链接在一起，从而创造价值。</p><p>您相信“认识谁比知道什么更重要”。您的金钱往往来自于合作、中介、佣金或信息差。您乐观开朗，生活态度随性，通常不需要像“统治者”那样苦哈哈地工作，也能过得不错，因为总有人愿意为您买单或提供机会。</p><p>您是天生的组局者，只要有您在，就不愁没有机会。但您内心深处可能缺乏独立感，总觉得自己需要依赖某个平台或大佬。</p>",
+            shadow:["<b>缺乏独立性</b>：您容易产生财务依赖，习惯依附于更强大的伙伴、配偶或父母。一旦关系破裂，您的经济来源就会断供。", "<b>忽视财务细节</b>：您只看大方向，不看合同条款和账单细节，容易因此吃亏或被骗。", "<b>表面光鲜</b>：您可能为了维持社交圈子而花费巨资，导致实际上存不下钱。"],
+            power:["<b>惊人的资源整合力</b>：您能用别人的钱、别人的技术办成自己的事（借力打力）。", "<b>敏锐的信息嗅觉</b>：您总是第一个知道哪里有赚钱机会的人。", "<b>轻松赚钱的天赋</b>：您能发现致富的捷径，用最小的力气获得最大的回报。"],
+            advice:"1. <b>建立“护城河”</b>：人脉是流动的，技能是自己的。尝试掌握一项不依赖他人的核心技能，作为保底。<br><br>2. <b>资源变现体系化</b>：不要总是免费做“好人”牵线搭桥。设计一套合理的商业模式（如顾问费、佣金），让您的连接产生实实在在的现金流。<br><br>3. <b>关注现金流</b>：不要只听别人画大饼。在合作中，确保钱能落袋为安，看懂财务报表对您至关重要。",
+            good:"统治者 (帮你变现)", bad:"滋养者 (让你更想依赖)"
+        },
+        "F": {
+            name:"浪漫派", sub:"Romantic", 
+            tags:["佛系","自由","逃避"],
+            desc:"<p>您是金钱世界的隐士及享乐者。您真心觉得“钱够花就行，多了是负担”。您讨厌被数字、KPI、账单束缚，追求的是心灵的自由、生活的品质和当下的快乐。</p><p>您可能经常不看价格就买东西，不是为了炫耀，纯粹是因为“我喜欢”。在赚钱方面，您比较随缘，不愿意为了高薪而去忍受不喜欢的工作。您相信宇宙会照顾好您，虽然您通常财运确实不错，但这种“随性”也是一颗定时炸弹。</p><p>您可能经常为了“诗和远方”而裸辞，或者为了一个爱好而花光积蓄。您活得让人羡慕，但深夜面对账单时，您也会感到恐慌。</p>",
+            shadow:["<b>极度缺乏抗风险能力</b>：因为没有储蓄习惯，一场突如其来的疾病或失业就能瞬间击垮您的生活。", "<b>鸵鸟心态</b>：不敢看银行余额，不敢开账单邮件。通过“不看”来假装问题不存在。", "<b>容易成为负担</b>：到了关键时刻，可能需要家人或朋友为您收拾财务烂摊子。"],
+            power:["<b>极高的幸福商数</b>：您不容易陷入金钱焦虑，心态平和，这种能量非常吸引人。", "<b>活在当下的智慧</b>：您懂得享受生命，这本身就是一种巨大的财富。", "<b>适应力强</b>：即使钱不多，您也能把日子过得有滋有味，富有情趣。"],
+            advice:"1. <b>直面金钱</b>：每周花10分钟检查一次账户，不要逃避。这不会夺走您的自由，反而会给您真正的自由（免于恐惧的自由）。<br><br>2. <b>自动化理财</b>：您最讨厌管钱，那就别管。设置银行卡自动划扣，发工资当天自动存入理财账户，眼不见为净，强制储蓄。<br><br>3. <b>寻找互补搭档</b>：如果您创业或结婚，一定要找一个务实的“守财奴”或“统治者”来帮您打理后方。",
+            good:"守财奴 (帮你兜底)", bad:"颠覆者 (一起流浪)"
+        },
+        "G": {
+            name:"炼金师", sub:"The Alchemist", 
+            tags:["投资","理智","价值"],
+            desc:"<p>您是神秘的魔法师，也是理性的投资者。您对金钱有着独特的理解——钱不是用来花的，而是用来生钱的工具。您对数字、复利、商业模式有着天然的敏感度。</p><p>您不喜欢通过出卖时间（打工）赚钱，而热衷于通过资本运作、投资理财、知识产权来实现财富增值。您往往显得有些特立独行，甚至有些清高，看不起为了蝇头小利而奔波的人。您追求的是财务自由，以及通过财富去实现更大的社会理想。</p><p>您可能在很年轻的时候就开始关注股市、房产或加密货币。您相信智慧可以战胜市场，您享受那种看着资产自动增长的快感。</p>",
+            shadow:["<b>眼高手低</b>：容易看不起赚小钱的机会，导致现金流枯竭。总想憋个大招，结果常常饿肚子。", "<b>过度理性</b>：在别人眼里可能显得冷血、算计。在感情中也容易权衡利弊，忽略了情感的流动。", "<b>风险偏好过高</b>：有时为了追求高回报，会过于自信地进行杠杆操作，导致翻车。"],
+            power:["<b>点石成金的能力</b>：您能发现被别人低估的资产或机会。", "<b>长远的战略眼光</b>：您能忍受短期的波动，坚持长期主义。", "<b>财富增值高手</b>：只要给您一笔本金，您有能力让它像滚雪球一样增长。"],
+            advice:"1. <b>落地实业</b>：不要只玩数字游戏。尝试做一些接地气的、能产生稳定现金流的小生意，这能为您的大梦想提供燃料。<br><br>2. <b>敬畏市场</b>：永远保持风控意识。记住，活下去比赚得多更重要。不要满仓，不要All-in。<br><br>3. <b>温暖连接</b>：财富最终是为人服务的。尝试用您的财富去温暖身边的人，而不仅仅是看着数字跳动。",
+            good:"守财奴 (提供本金)", bad:"挥霍者 (乱花你的收益)"
+        },
+        "H": {
+            name:"颠覆者", sub:"The Maverick", 
+            tags:["冒险","创新","大起大落"],
+            desc:"<p>您是赌徒，也是革命者。您天生反骨，讨厌循规蹈矩，讨厌朝九晚五。您对风险有着异于常人的耐受度，甚至享受在悬崖边跳舞的刺激感。</p><p>您喜欢的赚钱方式是“搞一把大的”，比如创业、炒币、高风险投资。您的财富轨迹通常是过山车式的——要么一夜暴富，要么倾家荡产。您是那种能改变世界的创新者，但如果缺乏制约，也极易走向毁灭。您相信规则就是用来打破的。</p><p>您看不起那些按部就班领工资的人，您觉得人生就是一场豪赌。您拥有极强的逆商，哪怕跌倒一百次，您也能第一百零一次站起来。</p>",
+            shadow:["<b>赌徒心态</b>：容易上头，输了想回本，赢了想更多，最终可能满盘皆输。", "<b>缺乏稳定性</b>：您的财务状况让家人整天提心吊胆，缺乏安全感。", "<b>忽视基础</b>：总想走捷径，不愿意打地基，导致财富大厦根基不稳。"],
+            power:["<b>惊人的逆商</b>：无论跌倒多少次，您都有从头再来的勇气和能力。", "<b>创新与破局</b>：您能看到别人不敢想的机会，做出颠覆性的产品。", "<b>巨大的爆发力</b>：在风口来临时，您是最有可能实现阶层跨越的人。"],
+            advice:"1. <b>配置“保命钱”</b>：无论您多么看好一个项目，必须留出30%的钱放在绝对安全的地方（如国债、保险），这是您东山再起的底牌。<br><br>2. <b>寻找“刹车片”</b>：您需要一个保守的合伙人或财务顾问。在您头脑发热想All-in的时候，听听他们的反对意见。<br><br>3. <b>耐心就是钱</b>：承认有些事情是不能速成的。给种子发芽的时间，不要拔苗助长。",
+            good:"守财奴 (拉住你的缰绳)", bad:"享乐家 (加速消耗)"
+        }
+    };
+
+    let scores = { A:0, B:0, C:0, D:0, E:0, F:0, G:0, H:0 };
+    let cur = 0;
+
+    function start() {
+        if(document.getElementById('code').value.trim() === PASSWORD) {
+            document.getElementById('p1').style.display='none';
+            document.getElementById('p2').style.display='block';
+            renderQ();
+        } else {
+            document.getElementById('err').style.display='block';
+        }
+    }
+
+    function renderQ() {
+        let q = QS[cur];
+        document.getElementById('idx').innerText = cur+1;
+        document.getElementById('q-txt').innerText = q.t;
+        document.getElementById('p-fill').style.width = ((cur+1)/QS.length)*100 + "%";
+        
+        let area = document.getElementById('opt-area');
+        area.innerHTML = '';
+        
+        const opts = [
+            {t:"完全不符", s:1}, {t:"不太符合", s:2}, {t:"一般", s:3}, {t:"比较符合", s:4}, {t:"非常符合", s:5}
+        ];
+        
+        opts.forEach(opt => {
+            let btn = document.createElement('div');
+            btn.className = 'opt-btn';
+            btn.innerHTML = `<div class="opt-circle"></div><span style="color:#B0C4DE">${opt.t}</span>`;
+            btn.onclick = () => {
+                scores[q.k] += opt.s;
+                btn.style.background = "#1C2540";
+                btn.style.borderColor = "var(--primary)";
+                setTimeout(() => {
+                    if(++cur < QS.length) renderQ(); else showReport();
+                }, 100);
+            }
+            area.appendChild(btn);
+        });
+        window.scrollTo(0,0);
+    }
+
+    function showReport() {
+        document.getElementById('p2').style.display='none';
+        document.getElementById('p3').style.display='block';
+
+        let sorted = Object.keys(scores).sort((a,b) => scores[b] - scores[a]);
+        let top1 = sorted[0];
+        let data = DIMS[top1];
+
+        document.getElementById('r-name').innerText = data.name;
+        document.getElementById('r-sub').innerText = data.sub;
+        document.getElementById('r-desc').innerHTML = data.desc;
+        document.getElementById('r-advice').innerHTML = data.advice;
+        document.getElementById('cp-good').innerText = data.good;
+        document.getElementById('cp-bad').innerText = data.bad;
+
+        let tagsHtml = "";
+        data.tags.forEach(t => tagsHtml += `<span class="tag-pill">#${t}</span>`);
+        document.getElementById('r-tags').innerHTML = tagsHtml;
+
+        function makeList(arr, icon) {
+            return arr.map(txt => `<div class="list-item"><span class="icon">${icon}</span>${txt}</div>`).join('');
+        }
+        document.getElementById('r-power').innerHTML = makeList(data.power, "✦");
+        document.getElementById('r-shadow').innerHTML = makeList(data.shadow, "🌑");
+
+        let rankHtml = "";
+        sorted.forEach(k => {
+            let s = scores[k];
+            let pct = (s / 20) * 100; 
+            rankHtml += `
+                <div class="rank-row">
+                    <div class="rank-name">${DIMS[k].name}</div>
+                    <div class="rank-bar"><div class="rank-fill" style="width:${pct}%"></div></div>
+                    <div class="rank-val">${s}</div>
+                </div>
+            `;
+        });
+        document.getElementById('rank-list').innerHTML = rankHtml;
+
+        drawRadar(scores);
+        window.scrollTo(0,0);
+    }
+
+    function drawRadar(s) {
+        let keys = Object.keys(s); 
+        let count = keys.length;
+        let r = 80, c = 120;
+        let poly = "", axis = "", labels = "";
+        
+        for(let i=0; i<count; i++) {
+            let key = keys[i];
+            let val = s[key];
+            let ratio = val / 20; 
+            let angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+            
+            let x = c + Math.cos(angle) * (r * ratio);
+            let y = c + Math.sin(angle) * (r * ratio);
+            poly += (i===0 ? "M" : "L") + `${x},${y} `;
+            
+            let ax = c + Math.cos(angle) * r;
+            let ay = c + Math.sin(angle) * r;
+            axis += `<line x1="${c}" y1="${c}" x2="${ax}" y2="${ay}" stroke="#333" stroke-width="1"/>`;
+            
+            let lx = c + Math.cos(angle) * (r + 20);
+            let ly = c + Math.sin(angle) * (r + 20);
+            labels += `<text x="${lx}" y="${ly}" font-size="10" fill="#888" text-anchor="middle" dominant-baseline="middle">${DIMS[key].name}</text>`;
+        }
+        poly += "Z";
+
+        let grid = "";
+        [0.33, 0.66, 1].forEach(scale => {
+            let gPoly = "";
+            for(let i=0; i<count; i++) {
+                let angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+                let gx = c + Math.cos(angle) * (r * scale);
+                let gy = c + Math.sin(angle) * (r * scale);
+                gPoly += (i===0 ? "M" : "L") + `${gx},${gy} `;
+            }
+            gPoly += "Z";
+            grid += `<path d="${gPoly}" fill="none" stroke="#333" stroke-width="1"/>`;
+        });
+
+        document.getElementById('radar-box').innerHTML = `
+            <svg width="240" height="240" viewBox="0 0 240 240">
+                ${grid}
+                ${axis}
+                <path d="${poly}" fill="rgba(212, 175, 55, 0.3)" stroke="#D4AF37" stroke-width="2"/>
+                ${labels}
+            </svg>
+        `;
+    }
+</script>
+</body>
+</html>
